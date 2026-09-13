@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Sistema de Control de Bonos (000–999)</title>
   
-  <!-- Librería SheetJS para exportar a Excel correctamente -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Librerías para exportar a Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <style>
     :root {
@@ -643,7 +644,7 @@
     <div class="header-actions">
       <button class="export-btn" onclick="descargarExcel()" title="Descargar datos en Excel">
         <span>📊</span>
-        <span>Excel</span>
+        <span>Descargar</span>
       </button>
       <div class="sync-status synced" id="syncStatus">✓ Guardado</div>
     </div>
@@ -868,26 +869,34 @@
       
       setTimeout(() => {
         try {
+          // Verificar si XLSX está disponible
           if (typeof XLSX === 'undefined') {
-            document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">Error: La librería XLSX no está cargada.</span>';
+            document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">⚠️ Librería Excel no disponible. Intenta de nuevo.</span>';
+            console.error('XLSX no está definido');
             return;
           }
 
-          const datosExcel = bonos.map(b => ({
-            'Nº Bono': b.numero,
-            'Nombre': b.nombre || '',
-            'Teléfono': b.telefono || '',
-            'Septiembre': b.sep,
-            'Octubre': b.oct,
-            'Noviembre': b.nov,
-            'Diciembre': b.dic,
-            'Observaciones': b.obs || ''
-          }));
+          // Crear datos para Excel
+          const datosExcel = [];
+          bonos.forEach(b => {
+            datosExcel.push({
+              'Nº Bono': b.numero,
+              'Nombre': b.nombre || '',
+              'Teléfono': b.telefono || '',
+              'Septiembre': b.sep,
+              'Octubre': b.oct,
+              'Noviembre': b.nov,
+              'Diciembre': b.dic,
+              'Observaciones': b.obs || ''
+            });
+          });
 
+          // Crear hoja de cálculo
           const ws = XLSX.utils.json_to_sheet(datosExcel);
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, "Bonos");
 
+          // Ajustar ancho de columnas
           ws['!cols'] = [
             { wch: 10 },
             { wch: 22 },
@@ -899,6 +908,7 @@
             { wch: 25 }
           ];
 
+          // Generar nombre del archivo con fecha y hora
           const now = new Date();
           const dia = String(now.getDate()).padStart(2, '0');
           const mes = String(now.getMonth() + 1).padStart(2, '0');
@@ -908,14 +918,17 @@
           
           const nombreArchivo = `Control_Bonos_${dia}-${mes}-${año}_${hora}-${min}.xlsx`;
           
+          // Descargar archivo
           XLSX.writeFile(wb, nombreArchivo);
           
-          document.getElementById('modalMensaje').innerHTML = '<span class="info-msg">✓ ¡Archivo descargado con éxito!</span>';
+          // Mostrar éxito
+          document.getElementById('modalMensaje').innerHTML = '<span class="info-msg">✅ ¡Archivo descargado exitosamente!</span>';
           
-          setTimeout(cerrarModal, 2500);
+          // Cerrar modal después de 3 segundos
+          setTimeout(cerrarModal, 3000);
         } catch (error) {
-          document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">Error: ' + error.message + '</span>';
-          console.error('Error Excel:', error);
+          console.error('Error al generar Excel:', error);
+          document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">❌ Error: ' + error.message + '</span>';
         }
       }, 500);
     }
@@ -1110,6 +1123,7 @@
       else if (activeTab === 'tab-todos') renderTodos();
     }
 
+    // Cargar datos al iniciar
     initData();
   </script>
 </body>
