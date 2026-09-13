@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Sistema de Control de Bonos (000–999)</title>
   <!-- Librería para Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
@@ -23,45 +23,58 @@
       --danger-dark: #a50e0e;
     }
 
-    * { box-sizing: border-box; }
+    * { 
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      margin: 0;
-      padding: 0;
+      font-size: 14px;
     }
 
     .header {
       background: #ffffff;
       border-bottom: 1px solid var(--border);
-      padding: 15px 20px;
+      padding: 10px 15px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 15px;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .header h1 {
       margin: 0;
-      font-size: 20px;
+      font-size: clamp(16px, 5vw, 22px);
       color: #1a73e8;
       flex: 1;
+      min-width: 200px;
     }
 
     .header-actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .sync-status {
-      font-size: 12px;
+      font-size: 11px;
       color: #70757a;
-      padding: 5px 10px;
+      padding: 4px 8px;
       background: #f1f3f4;
       border-radius: 4px;
       white-space: nowrap;
@@ -76,11 +89,11 @@
       background: #34a853;
       color: white;
       border: none;
-      padding: 10px 16px;
+      padding: 8px 14px;
       border-radius: 4px;
       cursor: pointer;
       font-weight: bold;
-      font-size: 14px;
+      font-size: 12px;
       white-space: nowrap;
       transition: all 0.2s;
     }
@@ -90,20 +103,28 @@
       transform: scale(1.05);
     }
 
+    @media (max-width: 600px) {
+      .export-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+      }
+    }
+
     .nav-menu {
       display: flex;
       background: #ffffff;
       border-bottom: 1px solid var(--border);
-      padding: 0 20px;
-      gap: 10px;
+      padding: 0 10px;
+      gap: 5px;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .nav-btn {
       background: none;
       border: none;
-      padding: 14px 18px;
-      font-size: 14px;
+      padding: 12px 12px;
+      font-size: 12px;
       font-weight: 600;
       color: #5f6368;
       cursor: pointer;
@@ -111,8 +132,9 @@
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 5px;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .nav-btn:hover {
@@ -125,10 +147,17 @@
       border-bottom-color: var(--primary);
     }
 
+    @media (max-width: 600px) {
+      .nav-btn {
+        padding: 10px 8px;
+        font-size: 11px;
+      }
+    }
+
     .container {
-      max-width: 1200px;
-      margin: 20px auto;
-      padding: 0 15px;
+      max-width: 1400px;
+      margin: 15px auto;
+      padding: 0 10px;
     }
 
     .tab-content {
@@ -141,71 +170,87 @@
 
     .grid-dashboard {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 15px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    @media (max-width: 600px) {
+      .grid-dashboard {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
     }
 
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 18px;
+      border-radius: 6px;
+      padding: 12px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
     .card h3 {
-      margin: 0 0 10px 0;
-      font-size: 15px;
+      margin: 0 0 8px 0;
+      font-size: 12px;
       color: #5f6368;
       text-transform: uppercase;
+      font-weight: 600;
     }
 
     .metric-value {
-      font-size: 24px;
+      font-size: clamp(18px, 4vw, 24px);
       font-weight: bold;
       color: var(--primary);
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
 
     .metric-sub {
-      font-size: 13px;
+      font-size: 11px;
       color: #70757a;
     }
 
     .filter-panel {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       align-items: center;
     }
 
     input[type="text"], select {
-      padding: 8px 12px;
+      padding: 6px 8px;
       border: 1px solid var(--border);
       border-radius: 4px;
-      font-size: 14px;
+      font-size: 12px;
       outline: none;
     }
 
     input[type="text"] {
       flex: 1;
-      min-width: 220px;
+      min-width: 150px;
+    }
+
+    @media (max-width: 600px) {
+      input[type="text"], select {
+        font-size: 14px;
+      }
     }
 
     .btn {
       background: var(--primary);
       color: white;
       border: none;
-      padding: 8px 16px;
+      padding: 6px 12px;
       border-radius: 4px;
       cursor: pointer;
       font-weight: bold;
+      font-size: 12px;
+      white-space: nowrap;
     }
 
     .btn:hover {
@@ -216,18 +261,25 @@
       overflow-x: auto;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      -webkit-overflow-scrolling: touch;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 600px) {
+      table {
+        font-size: 11px;
+      }
     }
 
     th, td {
-      padding: 10px 12px;
+      padding: 8px 6px;
       text-align: left;
       border-bottom: 1px solid var(--border);
     }
@@ -236,14 +288,18 @@
       background-color: #f8f9fa;
       font-weight: bold;
       color: #3c4043;
+      white-space: nowrap;
     }
 
     .status-select {
-      padding: 4px 8px;
-      border-radius: 4px;
+      padding: 3px 6px;
+      border-radius: 3px;
       font-weight: bold;
       border: 1px solid var(--border);
       cursor: pointer;
+      font-size: 11px;
+      width: 100%;
+      min-height: 30px;
     }
 
     .status-recibido {
@@ -262,11 +318,12 @@
       background: #34a853;
       color: white;
       border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 10px;
       cursor: pointer;
       font-weight: bold;
+      white-space: nowrap;
     }
 
     .action-btn:hover {
@@ -277,12 +334,13 @@
       background: var(--danger);
       color: white;
       border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 10px;
       cursor: pointer;
       font-weight: bold;
-      margin-left: 4px;
+      margin-left: 2px;
+      white-space: nowrap;
     }
 
     .clear-btn:hover {
@@ -292,23 +350,24 @@
     .summary-box {
       background: #e8f0fe;
       border-left: 4px solid var(--primary);
-      padding: 12px 15px;
-      margin-bottom: 15px;
-      border-radius: 0 8px 8px 0;
-      font-size: 14px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border-radius: 0 4px 4px 0;
+      font-size: 12px;
     }
 
     input[type="text"] {
       width: 100%;
-      padding: 6px;
+      padding: 4px 6px;
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 3px;
+      font-size: 11px;
     }
 
     .modal {
       display: none;
       position: fixed;
-      z-index: 1000;
+      z-index: 2000;
       left: 0;
       top: 0;
       width: 100%;
@@ -324,21 +383,30 @@
 
     .modal-content {
       background-color: #fff;
-      padding: 30px;
+      padding: 25px;
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.2);
       text-align: center;
+      max-width: 90%;
       max-width: 400px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     .modal-content h2 {
-      margin-top: 0;
+      margin: 0 0 10px 0;
       color: #1a73e8;
+      font-size: 18px;
     }
 
     .modal-content p {
-      margin: 15px 0;
+      margin: 10px 0;
       color: #70757a;
+      font-size: 13px;
     }
 
     .modal-btn {
@@ -350,21 +418,36 @@
       cursor: pointer;
       font-weight: bold;
       margin-top: 15px;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .modal-btn:hover {
       background: #2d8e47;
+    }
+
+    h2 {
+      font-size: clamp(18px, 5vw, 24px);
+      margin-top: 15px;
+      margin-bottom: 10px;
+    }
+
+    .info-msg {
+      color: #137333;
+      font-weight: bold;
+    }
+
+    .error-msg {
+      color: #c5221f;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <h1>🎟️ Control de Bonos (000–999)</h1>
+    <h1>🎟️ Bonos (000–999)</h1>
     <div class="header-actions">
-      <span style="font-size: 13px; color: #5f6368; white-space: nowrap;">Sep $1M | Oct $1M | Nov $1M | Dic $2M</span>
-      <button class="export-btn" onclick="descargarExcel()" title="Descargar datos en Excel">📊 Descargar Excel</button>
+      <button class="export-btn" onclick="descargarExcel()" title="Descargar datos en Excel">📊 Excel</button>
       <div class="sync-status synced" id="syncStatus">✓ Listo</div>
     </div>
   </div>
@@ -379,35 +462,35 @@
   <div class="container">
 
     <div id="tab-recau" class="tab-content active">
-      <h2>💰 Resumen de Recaudo General</h2>
+      <h2>💰 Recaudo General</h2>
       <div class="grid-dashboard">
         <div class="card">
-          <h3>Septiembre ($1.000.000)</h3>
+          <h3>Septiembre ($1M)</h3>
           <div class="metric-value" id="r-sep-val">$0</div>
-          <div class="metric-sub"><strong id="r-sep-cnt">0</strong> bonos pagados</div>
+          <div class="metric-sub"><strong id="r-sep-cnt">0</strong> pagados</div>
         </div>
         <div class="card">
-          <h3>Octubre ($1.000.000)</h3>
+          <h3>Octubre ($1M)</h3>
           <div class="metric-value" id="r-oct-val">$0</div>
-          <div class="metric-sub"><strong id="r-oct-cnt">0</strong> bonos pagados</div>
+          <div class="metric-sub"><strong id="r-oct-cnt">0</strong> pagados</div>
         </div>
         <div class="card">
-          <h3>Noviembre ($1.000.000)</h3>
+          <h3>Noviembre ($1M)</h3>
           <div class="metric-value" id="r-nov-val">$0</div>
-          <div class="metric-sub"><strong id="r-nov-cnt">0</strong> bonos pagados</div>
+          <div class="metric-sub"><strong id="r-nov-cnt">0</strong> pagados</div>
         </div>
         <div class="card">
-          <h3>Diciembre ($2.000.000)</h3>
+          <h3>Diciembre ($2M)</h3>
           <div class="metric-value" id="r-dic-val">$0</div>
-          <div class="metric-sub"><strong id="r-dic-cnt">0</strong> bonos pagados</div>
+          <div class="metric-sub"><strong id="r-dic-cnt">0</strong> pagados</div>
         </div>
       </div>
 
       <div class="summary-box">
-        <strong>Total Global: </strong> <span id="r-total-val" style="font-size: 18px; color: #1a73e8; font-weight: bold;">$0</span>
+        <strong>Total: </strong> <span id="r-total-val" style="font-size: 16px; color: #1a73e8; font-weight: bold;">$0</span>
       </div>
 
-      <h3>Detalle de Pagos por Mes</h3>
+      <h3>Detalle por Mes</h3>
       <div class="filter-panel">
         <select id="selMesRecaudado" onchange="renderRecaudados()">
           <option value="sep">Septiembre</option>
@@ -421,12 +504,12 @@
         <table>
           <thead>
             <tr>
-              <th>N° Bono</th>
-              <th>Adjudicado a</th>
+              <th>N°</th>
+              <th>Nombre</th>
               <th>Teléfono</th>
               <th>Estado</th>
               <th>Obs</th>
-              <th>Acciones</th>
+              <th>Acción</th>
             </tr>
           </thead>
           <tbody id="tb-recaudados"></tbody>
@@ -437,7 +520,7 @@
     <div id="tab-faltan" class="tab-content">
       <h2>⚠️ Bonos Pendientes</h2>
       <div class="summary-box" style="border-left-color: #c5221f; background: #fce8e6;">
-        Selecciona un mes para ver bonos por pagar.
+        Selecciona mes para ver pendientes.
       </div>
 
       <div class="filter-panel">
@@ -447,19 +530,19 @@
           <option value="nov">Noviembre</option>
           <option value="dic">Diciembre</option>
         </select>
-        <span style="margin-left: auto; font-weight: bold; color: #c5221f;" id="cnt-faltantes-text">0 Pendientes</span>
+        <span style="margin-left: auto; font-weight: bold; color: #c5221f; font-size: 12px;" id="cnt-faltantes-text">0 Pendientes</span>
       </div>
 
       <div class="table-container">
         <table>
           <thead>
             <tr>
-              <th>N° Bono</th>
+              <th>N°</th>
               <th>Nombre</th>
               <th>Teléfono</th>
               <th>Estado</th>
               <th>Obs</th>
-              <th>Acciones</th>
+              <th>Acción</th>
             </tr>
           </thead>
           <tbody id="tb-faltantes"></tbody>
@@ -470,7 +553,7 @@
     <div id="tab-buscar" class="tab-content">
       <h2>🔍 Buscar Bono</h2>
       <div class="filter-panel">
-        <input type="text" id="inputBuscar" placeholder="N° Bono, Nombre o Teléfono..." onkeyup="ejecutarBusqueda()">
+        <input type="text" id="inputBuscar" placeholder="N°, Nombre, Teléfono..." onkeyup="ejecutarBusqueda()">
         <button class="btn" onclick="limpiarBusqueda()">Limpiar</button>
       </div>
 
@@ -478,7 +561,7 @@
         <table>
           <thead>
             <tr>
-              <th>N° Bono</th>
+              <th>N°</th>
               <th>Nombre</th>
               <th>Teléfono</th>
               <th>Sep</th>
@@ -486,7 +569,7 @@
               <th>Nov</th>
               <th>Dic</th>
               <th>Obs</th>
-              <th>Acciones</th>
+              <th>Acción</th>
             </tr>
           </thead>
           <tbody id="tb-busqueda"></tbody>
@@ -500,7 +583,7 @@
         <table>
           <thead>
             <tr>
-              <th>N° Bono</th>
+              <th>N°</th>
               <th>Nombre</th>
               <th>Teléfono</th>
               <th>Sep</th>
@@ -508,7 +591,7 @@
               <th>Nov</th>
               <th>Dic</th>
               <th>Obs</th>
-              <th>Acciones</th>
+              <th>Acción</th>
             </tr>
           </thead>
           <tbody id="tb-todos"></tbody>
@@ -518,12 +601,10 @@
 
   </div>
 
-  <!-- Modal para confirmación de descarga -->
   <div id="modalDescarga" class="modal">
     <div class="modal-content">
       <h2>📊 Descargando Excel</h2>
-      <p>Tu archivo está siendo generado...</p>
-      <p id="modalMensaje" style="font-size: 12px; color: #999;"></p>
+      <p id="modalMensaje">Generando archivo...</p>
       <button class="modal-btn" onclick="cerrarModal()">Cerrar</button>
     </div>
   </div>
@@ -584,24 +665,33 @@
     }
 
     function descargarExcel() {
-      mostrarModal('Generando archivo...');
+      mostrarModal('⏳ Preparando archivo...');
       
       setTimeout(() => {
         try {
-          const datosExcel = bonos.map(b => ({
-            'N° Bono': b.numero,
-            'Nombre': b.nombre || '',
-            'Teléfono': b.telefono || '',
-            'Septiembre': b.sep,
-            'Octubre': b.oct,
-            'Noviembre': b.nov,
-            'Diciembre': b.dic,
-            'Observaciones': b.obs || ''
-          }));
+          const datosExcel = [];
+          bonos.forEach(b => {
+            datosExcel.push({
+              'Nº Bono': b.numero,
+              'Nombre': b.nombre || '',
+              'Teléfono': b.telefono || '',
+              'Septiembre': b.sep,
+              'Octubre': b.oct,
+              'Noviembre': b.nov,
+              'Diciembre': b.dic,
+              'Observaciones': b.obs || ''
+            });
+          });
 
-          const wb = XLSX.utils.book_new();
+          if (typeof XLSX === 'undefined') {
+            document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">Error: Librería no cargada</span>';
+            return;
+          }
+
           const ws = XLSX.utils.json_to_sheet(datosExcel);
-          
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Bonos");
+
           ws['!cols'] = [
             { wch: 10 },
             { wch: 20 },
@@ -613,21 +703,25 @@
             { wch: 25 }
           ];
 
-          XLSX.utils.book_append_sheet(wb, ws, "Bonos");
-
-          const fecha = new Date().toLocaleDateString('es-CO').replace(/\//g, '-');
-          const nombreArchivo = `Bonos_Control_${fecha}.xlsx`;
+          const now = new Date();
+          const dia = String(now.getDate()).padStart(2, '0');
+          const mes = String(now.getMonth() + 1).padStart(2, '0');
+          const año = now.getFullYear();
+          const hora = String(now.getHours()).padStart(2, '0');
+          const min = String(now.getMinutes()).padStart(2, '0');
+          
+          const nombreArchivo = `Bonos_${dia}-${mes}-${año}_${hora}-${min}.xlsx`;
           
           XLSX.writeFile(wb, nombreArchivo);
           
-          document.getElementById('modalMensaje').textContent = '✓ Descarga completada: ' + nombreArchivo;
+          document.getElementById('modalMensaje').innerHTML = '<span class="info-msg">✓ Descargado: ' + nombreArchivo + '</span>';
           
-          setTimeout(cerrarModal, 2000);
+          setTimeout(cerrarModal, 3000);
         } catch (error) {
-          document.getElementById('modalMensaje').textContent = 'Error: ' + error.message;
-          console.error('Error al descargar:', error);
+          document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">Error: ' + error.message + '</span>';
+          console.error('Error Excel:', error);
         }
-      }, 500);
+      }, 800);
     }
 
     function switchTab(tabId, evt) {
@@ -635,14 +729,14 @@
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
       document.getElementById('tab-' + tabId).classList.add('active');
-      if (evt && evt.currentTarget) {
+      if (evt?.currentTarget) {
         evt.currentTarget.classList.add('active');
       }
 
       if(tabId === 'recau') renderRecaudados();
-      if(tabId === 'faltan') renderFaltantes();
-      if(tabId === 'buscar') ejecutarBusqueda();
-      if(tabId === 'todos') renderTodos();
+      else if(tabId === 'faltan') renderFaltantes();
+      else if(tabId === 'buscar') ejecutarBusqueda();
+      else if(tabId === 'todos') renderTodos();
     }
 
     function updateDashboard() {
@@ -659,17 +753,17 @@
       let recNov = cntNov * 1000;
       let recDic = cntDic * 2000;
 
-      document.getElementById('r-sep-cnt').innerText = cntSep;
-      document.getElementById('r-oct-cnt').innerText = cntOct;
-      document.getElementById('r-nov-cnt').innerText = cntNov;
-      document.getElementById('r-dic-cnt').innerText = cntDic;
+      document.getElementById('r-sep-cnt').textContent = cntSep;
+      document.getElementById('r-oct-cnt').textContent = cntOct;
+      document.getElementById('r-nov-cnt').textContent = cntNov;
+      document.getElementById('r-dic-cnt').textContent = cntDic;
 
-      document.getElementById('r-sep-val').innerText = '$' + recSep.toLocaleString();
-      document.getElementById('r-oct-val').innerText = '$' + recOct.toLocaleString();
-      document.getElementById('r-nov-val').innerText = '$' + recNov.toLocaleString();
-      document.getElementById('r-dic-val').innerText = '$' + recDic.toLocaleString();
+      document.getElementById('r-sep-val').textContent = '$' + recSep.toLocaleString();
+      document.getElementById('r-oct-val').textContent = '$' + recOct.toLocaleString();
+      document.getElementById('r-nov-val').textContent = '$' + recNov.toLocaleString();
+      document.getElementById('r-dic-val').textContent = '$' + recDic.toLocaleString();
 
-      document.getElementById('r-total-val').innerText = '$' + (recSep + recOct + recNov + recDic).toLocaleString();
+      document.getElementById('r-total-val').textContent = '$' + (recSep + recOct + recNov + recDic).toLocaleString();
     }
 
     function renderRecaudados() {
@@ -679,7 +773,7 @@
 
       const filtrados = bonos.filter(b => b[mes] === 'Pago recibido');
       if(filtrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay pagos registrados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">Sin registros</td></tr>';
         return;
       }
 
@@ -689,11 +783,9 @@
           <td><strong>${item.numero}</strong></td>
           <td>${item.nombre || '-'}</td>
           <td>${item.telefono || '-'}</td>
-          <td><span class="status-select status-recibido">Pagado</span></td>
+          <td><span class="status-select status-recibido">✓</span></td>
           <td>${item.obs}</td>
-          <td>
-            <button class="clear-btn" onclick="deshacerPago('${item.numero}', '${mes}')">Anular</button>
-          </td>
+          <td><button class="clear-btn" onclick="deshacerPago('${item.numero}', '${mes}')">✕</button></td>
         `;
         tbody.appendChild(row);
       });
@@ -705,7 +797,7 @@
       tbody.innerHTML = '';
 
       const filtrados = bonos.filter(b => b[mes] === 'Pendiente');
-      document.getElementById('cnt-faltantes-text').innerText = filtrados.length + ' Pendientes';
+      document.getElementById('cnt-faltantes-text').textContent = filtrados.length + ' Pendientes';
 
       filtrados.forEach(item => {
         const row = document.createElement('tr');
@@ -715,9 +807,7 @@
           <td><input type="text" value="${item.telefono}" onchange="updateRecord('${item.numero}', 'telefono', this.value)"></td>
           <td><span class="status-select status-pendiente">Pendiente</span></td>
           <td><input type="text" value="${item.obs}" onchange="updateRecord('${item.numero}', 'obs', this.value)"></td>
-          <td>
-            <button class="action-btn" onclick="marcarPagado('${item.numero}', '${mes}')">✓ Pagar</button>
-          </td>
+          <td><button class="action-btn" onclick="marcarPagado('${item.numero}', '${mes}')">✓</button></td>
         `;
         tbody.appendChild(row);
       });
@@ -729,13 +819,13 @@
       tbody.innerHTML = '';
 
       if(!q) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Busca por número, nombre o teléfono.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 20px;">Busca por número, nombre o teléfono</td></tr>';
         return;
       }
 
       const res = bonos.filter(b => b.numero.includes(q) || b.nombre.toLowerCase().includes(q) || b.telefono.includes(q));
       if(res.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Sin resultados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 20px;">Sin resultados</td></tr>';
         return;
       }
 
@@ -764,9 +854,7 @@
         <td>${getStatusSelect(item.numero, 'nov', item.nov)}</td>
         <td>${getStatusSelect(item.numero, 'dic', item.dic)}</td>
         <td><input type="text" value="${item.obs}" onchange="updateRecord('${item.numero}', 'obs', this.value)"></td>
-        <td>
-          <button class="action-btn" onclick="quickPayAll('${item.numero}')">Todo</button>
-        </td>
+        <td><button class="action-btn" onclick="quickPayAll('${item.numero}')">Todo</button></td>
       `;
       tbody.appendChild(row);
     }
@@ -814,11 +902,11 @@
     }
 
     function refreshCurrentTab() {
-      const activeTab = document.querySelector('.tab-content.active').id;
+      const activeTab = document.querySelector('.tab-content.active')?.id;
       if (activeTab === 'tab-recau') renderRecaudados();
-      if (activeTab === 'tab-faltan') renderFaltantes();
-      if (activeTab === 'tab-buscar') ejecutarBusqueda();
-      if (activeTab === 'tab-todos') renderTodos();
+      else if (activeTab === 'tab-faltan') renderFaltantes();
+      else if (activeTab === 'tab-buscar') ejecutarBusqueda();
+      else if (activeTab === 'tab-todos') renderTodos();
     }
 
     initData();
