@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Sistema de Control de Bonos (000–999)</title>
-  <!-- Librería para Excel -->
+  <!-- Librerías para Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
@@ -32,6 +32,7 @@
     html, body {
       width: 100%;
       height: 100%;
+      overflow-x: hidden;
     }
 
     body {
@@ -53,6 +54,7 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     }
 
     .header h1 {
@@ -60,7 +62,7 @@
       font-size: clamp(16px, 5vw, 22px);
       color: #1a73e8;
       flex: 1;
-      min-width: 200px;
+      min-width: 150px;
     }
 
     .header-actions {
@@ -78,11 +80,13 @@
       background: #f1f3f4;
       border-radius: 4px;
       white-space: nowrap;
+      display: none;
     }
 
     .sync-status.synced {
       background: #e6f4ea;
       color: #137333;
+      display: inline-block;
     }
 
     .export-btn {
@@ -96,6 +100,9 @@
       font-size: 12px;
       white-space: nowrap;
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
     .export-btn:hover {
@@ -103,10 +110,18 @@
       transform: scale(1.05);
     }
 
+    .export-btn:active {
+      transform: scale(0.98);
+    }
+
     @media (max-width: 600px) {
       .export-btn {
-        padding: 6px 12px;
+        padding: 6px 10px;
         font-size: 11px;
+      }
+      
+      .sync-status {
+        display: none !important;
       }
     }
 
@@ -118,13 +133,27 @@
       gap: 5px;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+
+    .nav-menu::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .nav-menu::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .nav-menu::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
     }
 
     .nav-btn {
       background: none;
       border: none;
       padding: 12px 12px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       color: #5f6368;
       cursor: pointer;
@@ -147,21 +176,42 @@
       border-bottom-color: var(--primary);
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       .nav-btn {
         padding: 10px 8px;
         font-size: 11px;
       }
     }
 
+    @media (max-width: 600px) {
+      .nav-btn {
+        padding: 8px 6px;
+        font-size: 10px;
+        gap: 3px;
+      }
+    }
+
     .container {
-      max-width: 1400px;
+      max-width: 100%;
       margin: 15px auto;
-      padding: 0 10px;
+      padding: 0 12px;
+    }
+
+    @media (min-width: 1024px) {
+      .container {
+        max-width: 1400px;
+        padding: 0 15px;
+      }
     }
 
     .tab-content {
       display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     .tab-content.active {
@@ -170,15 +220,20 @@
 
     .grid-dashboard {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 10px;
       margin-bottom: 15px;
     }
 
-    @media (max-width: 600px) {
+    @media (min-width: 768px) {
       .grid-dashboard {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .grid-dashboard {
+        grid-template-columns: repeat(4, 1fr);
       }
     }
 
@@ -188,26 +243,37 @@
       border-radius: 6px;
       padding: 12px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
     .card h3 {
       margin: 0 0 8px 0;
-      font-size: 12px;
+      font-size: 11px;
       color: #5f6368;
       text-transform: uppercase;
       font-weight: 600;
+      letter-spacing: 0.5px;
     }
 
     .metric-value {
-      font-size: clamp(18px, 4vw, 24px);
+      font-size: clamp(18px, 4vw, 28px);
       font-weight: bold;
       color: var(--primary);
       margin-bottom: 4px;
+      word-break: break-word;
     }
 
     .metric-sub {
       font-size: 11px;
       color: #70757a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .filter-panel {
@@ -223,38 +289,48 @@
     }
 
     input[type="text"], select {
-      padding: 6px 8px;
+      padding: 8px 10px;
       border: 1px solid var(--border);
       border-radius: 4px;
       font-size: 12px;
       outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
     }
 
     input[type="text"] {
       flex: 1;
-      min-width: 150px;
+      min-width: 140px;
     }
 
-    @media (max-width: 600px) {
-      input[type="text"], select {
-        font-size: 14px;
-      }
+    select {
+      min-width: 120px;
     }
 
     .btn {
       background: var(--primary);
       color: white;
       border: none;
-      padding: 6px 12px;
+      padding: 8px 14px;
       border-radius: 4px;
       cursor: pointer;
       font-weight: bold;
       font-size: 12px;
       white-space: nowrap;
+      transition: all 0.2s;
     }
 
     .btn:hover {
       background: var(--primary-dark);
+      transform: scale(1.02);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
     }
 
     .table-container {
@@ -264,6 +340,20 @@
       border-radius: 6px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       -webkit-overflow-scrolling: touch;
+      margin-bottom: 20px;
+    }
+
+    .table-container::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
     }
 
     table {
@@ -279,7 +369,7 @@
     }
 
     th, td {
-      padding: 8px 6px;
+      padding: 10px 8px;
       text-align: left;
       border-bottom: 1px solid var(--border);
     }
@@ -289,17 +379,29 @@
       font-weight: bold;
       color: #3c4043;
       white-space: nowrap;
+      font-size: 12px;
+    }
+
+    @media (max-width: 600px) {
+      th, td {
+        padding: 8px 6px;
+      }
     }
 
     .status-select {
-      padding: 3px 6px;
+      padding: 6px 8px;
       border-radius: 3px;
       font-weight: bold;
       border: 1px solid var(--border);
       cursor: pointer;
       font-size: 11px;
       width: 100%;
-      min-height: 30px;
+      min-height: 32px;
+      transition: all 0.2s;
+    }
+
+    .status-select:hover {
+      border-color: var(--primary);
     }
 
     .status-recibido {
@@ -318,50 +420,79 @@
       background: #34a853;
       color: white;
       border: none;
-      padding: 4px 8px;
+      padding: 6px 10px;
       border-radius: 3px;
-      font-size: 10px;
+      font-size: 11px;
       cursor: pointer;
       font-weight: bold;
       white-space: nowrap;
+      transition: all 0.2s;
     }
 
     .action-btn:hover {
       background: #2d8e47;
+      transform: scale(1.05);
+    }
+
+    .action-btn:active {
+      transform: scale(0.98);
     }
 
     .clear-btn {
       background: var(--danger);
       color: white;
       border: none;
-      padding: 4px 8px;
+      padding: 6px 10px;
       border-radius: 3px;
-      font-size: 10px;
+      font-size: 11px;
       cursor: pointer;
       font-weight: bold;
       margin-left: 2px;
       white-space: nowrap;
+      transition: all 0.2s;
     }
 
     .clear-btn:hover {
       background: var(--danger-dark);
+      transform: scale(1.05);
+    }
+
+    .clear-btn:active {
+      transform: scale(0.98);
     }
 
     .summary-box {
       background: #e8f0fe;
       border-left: 4px solid var(--primary);
-      padding: 10px 12px;
+      padding: 12px 14px;
       margin-bottom: 12px;
       border-radius: 0 4px 4px 0;
-      font-size: 12px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .summary-box strong {
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
     input[type="text"] {
       width: 100%;
-      padding: 4px 6px;
+      padding: 6px 8px;
       border: 1px solid var(--border);
       border-radius: 3px;
       font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
     }
 
     .modal {
@@ -373,62 +504,85 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
     }
 
     .modal.show {
       display: flex;
-      justify-content: center;
-      align-items: center;
     }
 
     .modal-content {
       background-color: #fff;
       padding: 25px;
       border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
       text-align: center;
-      max-width: 90%;
-      max-width: 400px;
+      max-width: 100%;
+      width: 100%;
+      max-width: 450px;
       animation: slideIn 0.3s ease;
     }
 
     @keyframes slideIn {
-      from { transform: translateY(-50px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+      from { 
+        transform: translateY(-50px); 
+        opacity: 0; 
+      }
+      to { 
+        transform: translateY(0); 
+        opacity: 1; 
+      }
     }
 
     .modal-content h2 {
-      margin: 0 0 10px 0;
+      margin: 0 0 12px 0;
       color: #1a73e8;
-      font-size: 18px;
+      font-size: 20px;
     }
 
     .modal-content p {
       margin: 10px 0;
       color: #70757a;
-      font-size: 13px;
+      font-size: 14px;
+      line-height: 1.5;
     }
 
     .modal-btn {
       background: #34a853;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 12px 24px;
       border-radius: 4px;
       cursor: pointer;
       font-weight: bold;
       margin-top: 15px;
-      font-size: 13px;
+      font-size: 14px;
+      transition: all 0.2s;
     }
 
     .modal-btn:hover {
       background: #2d8e47;
+      transform: scale(1.02);
+    }
+
+    .modal-btn:active {
+      transform: scale(0.98);
     }
 
     h2 {
-      font-size: clamp(18px, 5vw, 24px);
+      font-size: clamp(18px, 5vw, 26px);
       margin-top: 15px;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    h3 {
+      font-size: clamp(16px, 4vw, 20px);
+      margin-top: 12px;
       margin-bottom: 10px;
+      color: var(--text);
     }
 
     .info-msg {
@@ -440,6 +594,49 @@
       color: #c5221f;
       font-weight: bold;
     }
+
+    .no-data-msg {
+      text-align: center;
+      padding: 30px 20px;
+      color: #70757a;
+      font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 0 10px;
+      }
+
+      h2, h3 {
+        margin-top: 10px;
+        margin-bottom: 8px;
+      }
+
+      .filter-panel {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filter-panel select,
+      .filter-panel input {
+        width: 100%;
+      }
+
+      .modal-content {
+        padding: 20px;
+      }
+
+      .summary-box {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 768px) and (min-width: 601px) {
+      .container {
+        padding: 0 12px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -447,7 +644,10 @@
   <div class="header">
     <h1>🎟️ Bonos (000–999)</h1>
     <div class="header-actions">
-      <button class="export-btn" onclick="descargarExcel()" title="Descargar datos en Excel">📊 Excel</button>
+      <button class="export-btn" onclick="descargarExcel()" title="Descargar datos en Excel">
+        <span>📊</span>
+        <span>Excel</span>
+      </button>
       <div class="sync-status synced" id="syncStatus">✓ Listo</div>
     </div>
   </div>
@@ -461,6 +661,7 @@
 
   <div class="container">
 
+    <!-- TAB 1: RECAUDADO -->
     <div id="tab-recau" class="tab-content active">
       <h2>💰 Recaudo General</h2>
       <div class="grid-dashboard">
@@ -487,7 +688,8 @@
       </div>
 
       <div class="summary-box">
-        <strong>Total: </strong> <span id="r-total-val" style="font-size: 16px; color: #1a73e8; font-weight: bold;">$0</span>
+        <strong>💵 Total Recaudado: </strong>
+        <span id="r-total-val" style="font-size: 18px; color: #1a73e8; font-weight: bold;">$0</span>
       </div>
 
       <h3>Detalle por Mes</h3>
@@ -517,10 +719,11 @@
       </div>
     </div>
 
+    <!-- TAB 2: PENDIENTES -->
     <div id="tab-faltan" class="tab-content">
       <h2>⚠️ Bonos Pendientes</h2>
       <div class="summary-box" style="border-left-color: #c5221f; background: #fce8e6;">
-        Selecciona mes para ver pendientes.
+        <strong>ℹ️ Selecciona mes para ver pendientes</strong>
       </div>
 
       <div class="filter-panel">
@@ -530,7 +733,7 @@
           <option value="nov">Noviembre</option>
           <option value="dic">Diciembre</option>
         </select>
-        <span style="margin-left: auto; font-weight: bold; color: #c5221f; font-size: 12px;" id="cnt-faltantes-text">0 Pendientes</span>
+        <span style="margin-left: auto; font-weight: bold; color: #c5221f; font-size: 12px; white-space: nowrap;" id="cnt-faltantes-text">0 Pendientes</span>
       </div>
 
       <div class="table-container">
@@ -550,11 +753,12 @@
       </div>
     </div>
 
+    <!-- TAB 3: BUSCAR -->
     <div id="tab-buscar" class="tab-content">
       <h2>🔍 Buscar Bono</h2>
       <div class="filter-panel">
-        <input type="text" id="inputBuscar" placeholder="N°, Nombre, Teléfono..." onkeyup="ejecutarBusqueda()">
-        <button class="btn" onclick="limpiarBusqueda()">Limpiar</button>
+        <input type="text" id="inputBuscar" placeholder="N° de bono, nombre o teléfono..." onkeyup="ejecutarBusqueda()">
+        <button class="btn" onclick="limpiarBusqueda()">🔄 Limpiar</button>
       </div>
 
       <div class="table-container">
@@ -577,6 +781,7 @@
       </div>
     </div>
 
+    <!-- TAB 4: TODOS LOS BONOS -->
     <div id="tab-todos" class="tab-content">
       <h2>📋 Todos los Bonos (000–999)</h2>
       <div class="table-container">
@@ -601,6 +806,7 @@
 
   </div>
 
+  <!-- MODAL DE DESCARGA -->
   <div id="modalDescarga" class="modal">
     <div class="modal-content">
       <h2>📊 Descargando Excel</h2>
@@ -684,7 +890,7 @@
           });
 
           if (typeof XLSX === 'undefined') {
-            document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">Error: Librería no cargada</span>';
+            document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">❌ Error: Librería no cargada</span>';
             return;
           }
 
@@ -692,15 +898,16 @@
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, "Bonos");
 
+          // Estilos de columnas
           ws['!cols'] = [
-            { wch: 10 },
-            { wch: 20 },
-            { wch: 15 },
-            { wch: 15 },
-            { wch: 15 },
-            { wch: 15 },
-            { wch: 15 },
-            { wch: 25 }
+            { wch: 10 },   // Nº Bono
+            { wch: 20 },   // Nombre
+            { wch: 15 },   // Teléfono
+            { wch: 15 },   // Septiembre
+            { wch: 15 },   // Octubre
+            { wch: 15 },   // Noviembre
+            { wch: 15 },   // Diciembre
+            { wch: 25 }    // Observaciones
           ];
 
           const now = new Date();
@@ -714,11 +921,11 @@
           
           XLSX.writeFile(wb, nombreArchivo);
           
-          document.getElementById('modalMensaje').innerHTML = '<span class="info-msg">✓ Descargado: ' + nombreArchivo + '</span>';
+          document.getElementById('modalMensaje').innerHTML = '<span class="info-msg">✅ Descargado: ' + nombreArchivo + '</span>';
           
           setTimeout(cerrarModal, 3000);
         } catch (error) {
-          document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">Error: ' + error.message + '</span>';
+          document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">❌ Error: ' + error.message + '</span>';
           console.error('Error Excel:', error);
         }
       }, 800);
@@ -763,7 +970,8 @@
       document.getElementById('r-nov-val').textContent = '$' + recNov.toLocaleString();
       document.getElementById('r-dic-val').textContent = '$' + recDic.toLocaleString();
 
-      document.getElementById('r-total-val').textContent = '$' + (recSep + recOct + recNov + recDic).toLocaleString();
+      let total = recSep + recOct + recNov + recDic;
+      document.getElementById('r-total-val').textContent = '$' + total.toLocaleString();
     }
 
     function renderRecaudados() {
@@ -773,7 +981,7 @@
 
       const filtrados = bonos.filter(b => b[mes] === 'Pago recibido');
       if(filtrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">Sin registros</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6"><div class="no-data-msg">Sin registros para este mes</div></td></tr>';
         return;
       }
 
@@ -783,9 +991,9 @@
           <td><strong>${item.numero}</strong></td>
           <td>${item.nombre || '-'}</td>
           <td>${item.telefono || '-'}</td>
-          <td><span class="status-select status-recibido">✓</span></td>
-          <td>${item.obs}</td>
-          <td><button class="clear-btn" onclick="deshacerPago('${item.numero}', '${mes}')">✕</button></td>
+          <td><span class="status-select status-recibido">✓ Pagado</span></td>
+          <td>${item.obs || '-'}</td>
+          <td><button class="clear-btn" onclick="deshacerPago('${item.numero}', '${mes}')">✕ Anular</button></td>
         `;
         tbody.appendChild(row);
       });
@@ -799,15 +1007,20 @@
       const filtrados = bonos.filter(b => b[mes] === 'Pendiente');
       document.getElementById('cnt-faltantes-text').textContent = filtrados.length + ' Pendientes';
 
+      if(filtrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6"><div class="no-data-msg">¡Todos pagados! ✅</div></td></tr>';
+        return;
+      }
+
       filtrados.forEach(item => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td><strong>${item.numero}</strong></td>
-          <td><input type="text" value="${item.nombre}" onchange="updateRecord('${item.numero}', 'nombre', this.value)"></td>
-          <td><input type="text" value="${item.telefono}" onchange="updateRecord('${item.numero}', 'telefono', this.value)"></td>
-          <td><span class="status-select status-pendiente">Pendiente</span></td>
-          <td><input type="text" value="${item.obs}" onchange="updateRecord('${item.numero}', 'obs', this.value)"></td>
-          <td><button class="action-btn" onclick="marcarPagado('${item.numero}', '${mes}')">✓</button></td>
+          <td><input type="text" value="${item.nombre}" onchange="updateRecord('${item.numero}', 'nombre', this.value)" placeholder="Nombre..."></td>
+          <td><input type="text" value="${item.telefono}" onchange="updateRecord('${item.numero}', 'telefono', this.value)" placeholder="Teléfono..."></td>
+          <td><span class="status-select status-pendiente">⏳ Pendiente</span></td>
+          <td><input type="text" value="${item.obs}" onchange="updateRecord('${item.numero}', 'obs', this.value)" placeholder="Novedad..."></td>
+          <td><button class="action-btn" onclick="marcarPagado('${item.numero}', '${mes}')">✓ Pagar</button></td>
         `;
         tbody.appendChild(row);
       });
@@ -819,13 +1032,13 @@
       tbody.innerHTML = '';
 
       if(!q) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 20px;">Busca por número, nombre o teléfono</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9"><div class="no-data-msg">Ingresa un número, nombre o teléfono para buscar</div></td></tr>';
         return;
       }
 
       const res = bonos.filter(b => b.numero.includes(q) || b.nombre.toLowerCase().includes(q) || b.telefono.includes(q));
       if(res.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 20px;">Sin resultados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9"><div class="no-data-msg">No se encontraron resultados</div></td></tr>';
         return;
       }
 
@@ -840,6 +1053,12 @@
     function renderTodos() {
       const tbody = document.getElementById('tb-todos');
       tbody.innerHTML = '';
+      
+      if(bonos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9"><div class="no-data-msg">Cargando datos...</div></td></tr>';
+        return;
+      }
+      
       bonos.forEach(item => renderRowInto(tbody, item));
     }
 
@@ -847,14 +1066,14 @@
       const row = document.createElement('tr');
       row.innerHTML = `
         <td><strong>${item.numero}</strong></td>
-        <td><input type="text" value="${item.nombre}" onchange="updateRecord('${item.numero}', 'nombre', this.value)"></td>
-        <td><input type="text" value="${item.telefono}" onchange="updateRecord('${item.numero}', 'telefono', this.value)"></td>
+        <td><input type="text" value="${item.nombre}" onchange="updateRecord('${item.numero}', 'nombre', this.value)" placeholder="Nombre..."></td>
+        <td><input type="text" value="${item.telefono}" onchange="updateRecord('${item.numero}', 'telefono', this.value)" placeholder="Teléfono..."></td>
         <td>${getStatusSelect(item.numero, 'sep', item.sep)}</td>
         <td>${getStatusSelect(item.numero, 'oct', item.oct)}</td>
         <td>${getStatusSelect(item.numero, 'nov', item.nov)}</td>
         <td>${getStatusSelect(item.numero, 'dic', item.dic)}</td>
-        <td><input type="text" value="${item.obs}" onchange="updateRecord('${item.numero}', 'obs', this.value)"></td>
-        <td><button class="action-btn" onclick="quickPayAll('${item.numero}')">Todo</button></td>
+        <td><input type="text" value="${item.obs}" onchange="updateRecord('${item.numero}', 'obs', this.value)" placeholder="Observación..."></td>
+        <td><button class="action-btn" onclick="quickPayAll('${item.numero}')">✓ Todo</button></td>
       `;
       tbody.appendChild(row);
     }
@@ -907,6 +1126,14 @@
       else if (activeTab === 'tab-faltan') renderFaltantes();
       else if (activeTab === 'tab-buscar') ejecutarBusqueda();
       else if (activeTab === 'tab-todos') renderTodos();
+    }
+
+    // Detectar si estamos en mobile para optimizaciones
+    const isMobile = window.innerWidth <= 768;
+    
+    // Prevenir zoom en inputs en mobile
+    if (isMobile) {
+      document.addEventListener('touchstart', function() {}, false);
     }
 
     initData();
