@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Control de Bonos (000–999)</title>
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-dark: #1557b0;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --text: #202124;
+      --border: #dadce0;
+      --success-bg: #e6f4ea;
+      --success-text: #137333;
+      --warning-bg: #fce8e6;
+      --warning-text: #c5221f;
+      --danger: #d93025;
+      --danger-dark: #a50e0e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+    }
+
+    .header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+      color: #1a73e8;
+    }
+
+    /* Menú de Navegación */
+    .nav-menu {
+      display: flex;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      gap: 10px;
+      overflow-x: auto;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      padding: 14px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #5f6368;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn:hover {
+      color: var(--primary);
+      background-color: #f1f3f4;
+    }
+
+    .nav-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Cards & Tarjetas */
+    .grid-dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card h3 {
+      margin: 0 0 10px 0;
+      font-size: 15px;
+      color: #5f6368;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+
+    .metric-sub {
+      font-size: 13px;
+      color: #70757a;
+    }
+
+    /* Filtros y Buscador */
+    .filter-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    input[type="text"], select {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Tablas */
+    .table-container {
+      overflow-x: auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+      color: #3c4043;
+    }
+
+    .status-select {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .status-recibido {
+      background-color: var(--success-bg);
+      color: var(--success-text);
+      border-color: #ceead6;
+    }
+
+    .status-pendiente {
+      background-color: var(--warning-bg);
+      color: var(--warning-text);
+      border-color: #fad2cf;
+    }
+
+    .action-btn {
+      background: #34a853;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .action-btn:hover {
+      background: #2d8e47;
+    }
+
+    .clear-btn {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-left: 4px;
+    }
+
+    .clear-btn:hover {
+      background: var(--danger-dark);
+    }
+
+    .summary-box {
+      background: #e8f0fe;
+      border-left: 4px solid var(--primary);
+      padding: 12px 15px;
+      margin-bottom: 15px;
+      border-radius: 0 8px 8px 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🎟️ Control de Bonos (000–999)</h1>
+    <span style="font-size: 13px; color: #5f6368;">Sorteos: Sep $1M | Oct $1M | Nov $1M | Dic $2M</span>
+  </div>
+
+  <!-- MENÚ PRINCIPAL -->
+  <div class="nav-menu">
+    <button class="nav-btn active" onclick="switchTab('recau', event)">💰 1. Lo Recaudado</button>
+    <button class="nav-btn" onclick="switchTab('faltan', event)">⚠️ 2. Faltantes / Pendientes</button>
+    <button class="nav-btn" onclick="switchTab('buscar', event)">🔍 3. Buscar Bono</button>
+    <button class="nav-btn" onclick="switchTab('todos', event)">📋 4. Todos los Bonos</button>
+  </div>
+
+  <div class="container">
+
+    <!-- MENÚ 1: LO RECAUDADO -->
+    <div id="tab-recau" class="tab-content active">
+      <h2>💰 Resumen de Recaudo General</h2>
+      <div class="grid-dashboard">
+        <div class="card">
+          <h3>Septiembre ($1.000.000)</h3>
+          <div class="metric-value" id="r-sep-val">$0</div>
+          <div class="metric-sub"><strong id="r-sep-cnt">0</strong> bonos pagados (1.000)</div>
+        </div>
+        <div class="card">
+          <h3>Octubre ($1.000.000)</h3>
+          <div class="metric-value" id="r-oct-val">$0</div>
+          <div class="metric-sub"><strong id="r-oct-cnt">0</strong> bonos pagados (1.000)</div>
+        </div>
+        <div class="card">
+          <h3>Noviembre ($1.000.000)</h3>
+          <div class="metric-value" id="r-nov-val">$0</div>
+          <div class="metric-sub"><strong id="r-nov-cnt">0</strong> bonos pagados (1.000)</div>
+        </div>
+        <div class="card">
+          <h3>Diciembre ($2.000.000)</h3>
+          <div class="metric-value" id="r-dic-val">$0</div>
+          <div class="metric-sub"><strong id="r-dic-cnt">0</strong> bonos pagados (1.000)</div>
+        </div>
+      </div>
+
+      <div class="summary-box">
+        <strong>Total Global Recaudado: </strong> <span id="r-total-val" style="font-size: 18px; color: #1a73e8; font-weight: bold;">$0</span>
+      </div>
+
+      <h3>Detalle de Pagos Recibidos por Mes</h3>
+      <div class="filter-panel">
+        <label><strong>Seleccionar Mes:</strong></label>
+        <select id="selMesRecaudado" onchange="renderRecaudados()">
+          <option value="sep">Septiembre</option>
+          <option value="oct">Octubre</option>
+          <option value="nov">Noviembre</option>
+          <option value="dic">Diciembre</option>
+        </select>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>N° Bono</th>
+              <th>Adjudicado a</th>
+              <th>Teléfono</th>
+              <th>Estado del Mes</th>
+              <th>Observaciones</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tb-recaudados"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MENÚ 2: FALTANTES -->
+    <div id="tab-faltan" class="tab-content">
+      <h2>⚠️ Bonos Faltantes por Pagar</h2>
+      <div class="summary-box" style="border-left-color: #c5221f; background: #fce8e6;">
+        Selecciona un mes para visualizar la lista de bonos pendientes de cobro.
+      </div>
+
+      <div class="filter-panel">
+        <label><strong>Filtrar Pendientes de:</strong></label>
+        <select id="selMesFaltante" onchange="renderFaltantes()">
+          <option value="sep">Septiembre</option>
+          <option value="oct">Octubre</option>
+          <option value="nov">Noviembre</option>
+          <option value="dic">Diciembre</option>
+        </select>
+        <span style="margin-left: auto; font-weight: bold; color: #c5221f;" id="cnt-faltantes-text">0 Pendientes</span>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>N° Bono</th>
+              <th>Adjudicado a</th>
+              <th>Teléfono</th>
+              <th>Estado del Mes</th>
+              <th>Observaciones</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tb-faltantes"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MENÚ 3: BUSCAR -->
+    <div id="tab-buscar" class="tab-content">
+      <h2>🔍 Buscador Rápido de Bonos</h2>
+      <div class="filter-panel">
+        <input type="text" id="inputBuscar" placeholder="Digita N° de Bono (ej. 005), Nombre o Teléfono..." onkeyup="ejecutarBusqueda()">
+        <button class="btn" onclick="limpiarBusqueda()">Limpiar Filtro</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>N° Bono</th>
+              <th>Adjudicado a</th>
+              <th>Teléfono</th>
+              <th>Septiembre</th>
+              <th>Octubre</th>
+              <th>Noviembre</th>
+              <th>Diciembre</th>
+              <th>Observaciones</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tb-busqueda"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MENÚ 4: TODOS LOS BONOS -->
+    <div id="tab-todos" class="tab-content">
+      <h2>📋 Lista Completa (000–999)</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>N° Bono</th>
+              <th>Adjudicado a</th>
+              <th>Teléfono</th>
+              <th>Septiembre</th>
+              <th>Octubre</th>
+              <th>Noviembre</th>
+              <th>Diciembre</th>
+              <th>Observaciones</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tb-todos"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let bonos = JSON.parse(localStorage.getItem('bonosData_v2')) || [];
+
+    if (bonos.length === 0) {
+      for (let i = 0; i < 1000; i++) {
+        let numStr = i.toString().padStart(3, '0');
+        bonos.push({
+          numero: numStr,
+          nombre: "",
+          telefono: "",
+          sep: "Pendiente",
+          oct: "Pendiente",
+          nov: "Pendiente",
+          dic: "Pendiente",
+          obs: ""
+        });
+      }
+      saveData();
+    }
+
+    function saveData() {
+      localStorage.setItem('bonosData_v2', JSON.stringify(bonos));
+      updateDashboard();
+    }
+
+    function switchTab(tabId, evt) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+      document.getElementById('tab-' + tabId).classList.add('active');
+      if (evt && evt.currentTarget) {
+        evt.currentTarget.classList.add('active');
+      }
+
+      if(tabId === 'recau') renderRecaudados();
+      if(tabId === 'faltan') renderFaltantes();
+      if(tabId === 'buscar') ejecutarBusqueda();
+      if(tabId === 'todos') renderTodos();
+    }
+
+    function updateDashboard() {
+      let cntSep = 0, cntOct = 0, cntNov = 0, cntDic = 0;
+      bonos.forEach(b => {
+        if (b.sep === 'Pago recibido') cntSep++;
+        if (b.oct === 'Pago recibido') cntOct++;
+        if (b.nov === 'Pago recibido') cntNov++;
+        if (b.dic === 'Pago recibido') cntDic++;
+      });
+
+      let recSep = cntSep * 1000;
+      let recOct = cntOct * 1000;
+      let recNov = cntNov * 1000;
+      let recDic = cntDic * 2000;
+
+      document.getElementById('r-sep-cnt').innerText = cntSep;
+      document.getElementById('r-oct-cnt').innerText = cntOct;
+      document.getElementById('r-nov-cnt').innerText = cntNov;
+      document.getElementById('r-dic-cnt').innerText = cntDic;
+
+      document.getElementById('r-sep-val').innerText = '$' + recSep.toLocaleString();
+      document.getElementById('r-oct-val').innerText = '$' + recOct.toLocaleString();
+      document.getElementById('r-nov-val').innerText = '$' + recNov.toLocaleString();
+      document.getElementById('r-dic-val').innerText = '$' + recDic.toLocaleString();
+
+      document.getElementById('r-total-val').innerText = '$' + (recSep + recOct + recNov + recDic).toLocaleString();
+    }
+
+    function renderRecaudados() {
+      const mes = document.getElementById('selMesRecaudado').value;
+      const tbody = document.getElementById('tb-recaudados');
+      tbody.innerHTML = '';
+
+      const filtrados = bonos.filter(b => b[mes] === 'Pago recibido');
+      if(filtrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay pagos registrados para este mes aún.</td></tr>';
+        return;
+      }
+
+      filtrados.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${item.numero}</strong></td>
+          <td>${item.nombre || '<i>Sin nombre</i>'}</td>
+          <td>${item.telefono || '<i>Sin teléfono</i>'}</td>
+          <td><span class="status-select status-recibido">Pago recibido</span></td>
+          <td>${item.obs}</td>
+          <td>
+            <button class="clear-btn" onclick="deshacerPago('${item.numero}', '${mes}')" title="Anular pago del mes">Anular Pago</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function renderFaltantes() {
+      const mes = document.getElementById('selMesFaltante').value;
+      const tbody = document.getElementById('tb-faltantes');
+      tbody.innerHTML = '';
+
+      const filtrados = bonos.filter(b => b[mes] === 'Pendiente');
+      document.getElementById('cnt-faltantes-text').innerText = filtrados.length + ' Pendientes';
+
+      filtrados.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${item.numero}</strong></td>
+          <td><input type="text" value="${item.nombre}" placeholder="Nombre..." onchange="updateRecord('${item.numero}', 'nombre', this.value)"></td>
+          <td><input type="text" value="${item.telefono}" placeholder="Teléfono..." onchange="updateRecord('${item.numero}', 'telefono', this.value)"></td>
+          <td><span class="status-select status-pendiente">Pendiente</span></td>
+          <td><input type="text" value="${item.obs}" placeholder="Novedad..." onchange="updateRecord('${item.numero}', 'obs', this.value)"></td>
+          <td>
+            <button class="action-btn" onclick="marcarPagado('${item.numero}', '${mes}')">Marcar Pagado</button>
+            <button class="clear-btn" onclick="limpiarBono('${item.numero}')" title="Borrar datos del bono">Borrar</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function ejecutarBusqueda() {
+      const q = document.getElementById('inputBuscar').value.toLowerCase().trim();
+      const tbody = document.getElementById('tb-busqueda');
+      tbody.innerHTML = '';
+
+      if(!q) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Ingresa un número, nombre o teléfono arriba para buscar.</td></tr>';
+        return;
+      }
+
+      const res = bonos.filter(b => b.numero.includes(q) || b.nombre.toLowerCase().includes(q) || b.telefono.includes(q));
+      if(res.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No se encontraron resultados.</td></tr>';
+        return;
+      }
+
+      res.forEach(item => renderRowInto(tbody, item));
+    }
+
+    function limpiarBusqueda() {
+      document.getElementById('inputBuscar').value = '';
+      ejecutarBusqueda();
+    }
+
+    function renderTodos() {
+      const tbody = document.getElementById('tb-todos');
+      tbody.innerHTML = '';
+      bonos.forEach(item => renderRowInto(tbody, item));
+    }
+
+    function renderRowInto(tbody, item) {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><strong>${item.numero}</strong></td>
+        <td><input type="text" value="${item.nombre}" placeholder="Nombre..." onchange="updateRecord('${item.numero}', 'nombre', this.value)"></td>
+        <td><input type="text" value="${item.telefono}" placeholder="Teléfono..." onchange="updateRecord('${item.numero}', 'telefono', this.value)"></td>
+        <td>${getStatusSelect(item.numero, 'sep', item.sep)}</td>
+        <td>${getStatusSelect(item.numero, 'oct', item.oct)}</td>
+        <td>${getStatusSelect(item.numero, 'nov', item.nov)}</td>
+        <td>${getStatusSelect(item.numero, 'dic', item.dic)}</td>
+        <td><input type="text" value="${item.obs}" placeholder="Novedad..." onchange="updateRecord('${item.numero}', 'obs', this.value)"></td>
+        <td>
+          <button class="action-btn" onclick="quickPayAll('${item.numero}')" title="Marcar todos los meses pagados">Pagar Todo</button>
+          <button class="clear-btn" onclick="limpiarBono('${item.numero}')" title="Resetear datos de este bono">Borrar</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    }
+
+    function getStatusSelect(numero, month, currentStatus) {
+      const badgeClass = currentStatus === 'Pago recibido' ? 'status-recibido' : 'status-pendiente';
+      return `
+        <select class="status-select ${badgeClass}" onchange="updateRecord('${numero}', '${month}', this.value)">
+          <option value="Pendiente" ${currentStatus === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+          <option value="Pago recibido" ${currentStatus === 'Pago recibido' ? 'selected' : ''}>Pago recibido</option>
+        </select>
+      `;
+    }
+
+    function updateRecord(numero, field, value) {
+      const idx = bonos.findIndex(b => b.numero === numero);
+      if (idx !== -1) {
+        bonos[idx][field] = value;
+        saveData();
+      }
+    }
+
+    function marcarPagado(numero, mes) {
+      updateRecord(numero, mes, 'Pago recibido');
+      renderFaltantes();
+    }
+
+    function deshacerPago(numero, mes) {
+      updateRecord(numero, mes, 'Pendiente');
+      renderRecaudados();
+    }
+
+    function quickPayAll(numero) {
+      const idx = bonos.findIndex(b => b.numero === numero);
+      if (idx !== -1) {
+        bonos[idx].sep = 'Pago recibido';
+        bonos[idx].oct = 'Pago recibido';
+        bonos[idx].nov = 'Pago recibido';
+        bonos[idx].dic = 'Pago recibido';
+        saveData();
+        refreshCurrentTab();
+      }
+    }
+
+    function limpiarBono(numero) {
+      if (confirm(`¿Estás seguro de resetear los datos del bono N° ${numero}? Se borrará el nombre, teléfono, novedades y pagos.`)) {
+        const idx = bonos.findIndex(b => b.numero === numero);
+        if (idx !== -1) {
+          bonos[idx] = {
+            numero: numero,
+            nombre: "",
+            telefono: "",
+            sep: "Pendiente",
+            oct: "Pendiente",
+            nov: "Pendiente",
+            dic: "Pendiente",
+            obs: ""
+          };
+          saveData();
+          refreshCurrentTab();
+        }
+      }
+    }
+
+    function refreshCurrentTab() {
+      const activeTab = document.querySelector('.tab-content.active').id;
+      if (activeTab === 'tab-recau') renderRecaudados();
+      if (activeTab === 'tab-faltan') renderFaltantes();
+      if (activeTab === 'tab-buscar') ejecutarBusqueda();
+      if (activeTab === 'tab-todos') renderTodos();
+    }
+
+    updateDashboard();
+    renderRecaudados();
+  </script>
+</body>
+</html>
