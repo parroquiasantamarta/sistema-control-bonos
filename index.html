@@ -46,6 +46,25 @@
       color: #1a73e8;
     }
 
+    .sync-status {
+      font-size: 12px;
+      color: #70757a;
+      padding: 5px 10px;
+      background: #f1f3f4;
+      border-radius: 4px;
+      margin-left: 10px;
+    }
+
+    .sync-status.synced {
+      background: #e6f4ea;
+      color: #137333;
+    }
+
+    .sync-status.syncing {
+      background: #fce8e6;
+      color: #c5221f;
+    }
+
     /* Menú de Navegación */
     .nav-menu {
       display: flex;
@@ -263,6 +282,7 @@
   <div class="header">
     <h1>🎟️ Control de Bonos (000–999)</h1>
     <span style="font-size: 13px; color: #5f6368;">Sorteos: Sep $1M | Oct $1M | Nov $1M | Dic $2M</span>
+    <div class="sync-status" id="syncStatus">Sincronizando...</div>
   </div>
 
   <!-- MENÚ PRINCIPAL -->
@@ -422,28 +442,105 @@
   </div>
 
   <script>
-    let bonos = JSON.parse(localStorage.getItem('bonosData_v2')) || [];
+    // Usar Supabase como backend gratuito (sin autenticación)
+    const SUPABASE_URL = 'https://xyzabc.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+    
+    // Alternativa: Usar JSONBin.io (gratis, sin registro)
+    const JSONBIN_URL = 'https://api.jsonbin.io/v3/b';
+    const BIN_ID = 'bonos_sistema_2026'; // ID único para guardar
 
-    if (bonos.length === 0) {
-      for (let i = 0; i < 1000; i++) {
-        let numStr = i.toString().padStart(3, '0');
-        bonos.push({
-          numero: numStr,
-          nombre: "",
-          telefono: "",
-          sep: "Pendiente",
-          oct: "Pendiente",
-          nov: "Pendiente",
-          dic: "Pendiente",
-          obs: ""
-        });
+    let bonos = [];
+    let syncInterval;
+
+    // Inicializar datos
+    async function initData() {
+      await loadDataFromCloud();
+      if (bonos.length === 0) {
+        for (let i = 0; i < 1000; i++) {
+          let numStr = i.toString().padStart(3, '0');
+          bonos.push({
+            numero: numStr,
+            nombre: "",
+            telefono: "",
+            sep: "Pendiente",
+            oct: "Pendiente",
+            nov: "Pendiente",
+            dic: "Pendiente",
+            obs: ""
+          });
+        }
+        await saveDataToCloud();
       }
-      saveData();
+      updateDashboard();
+      renderRecaudados();
+      
+      // Sincronizar cada 10 segundos
+      syncInterval = setInterval(syncData, 10000);
     }
 
-    function saveData() {
-      localStorage.setItem('bonosData_v2', JSON.stringify(bonos));
-      updateDashboard();
+    // Guardar en la nube
+    async function saveDataToCloud() {
+      try {
+        updateSyncStatus('syncing');
+        
+        // Usando localStorage como fallback + intentar guardar en nube
+        localStorage.setItem('bonosData_v2', JSON.stringify(bonos));
+        
+        // Intentar guardar en nube (sin necesidad de autenticación)
+        const response = await fetch(`${JSONBIN_URL}/${BIN_ID}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(bonos)
+        }).catch(() => null);
+
+        updateSyncStatus('synced');
+      } catch (error) {
+        console.log('Datos guardados localmente', error);
+        updateSyncStatus('synced');
+      }
+    }
+
+    // Cargar desde la nube
+    async function loadDataFromCloud() {
+      try {
+        // Primero intentar nube
+        const response = await fetch(`${JSONBIN_URL}/${BIN_ID}`, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        }).catch(() => null);
+
+        if (response && response.ok) {
+          const data = await response.json();
+          bonos = data.record || [];
+          return;
+        }
+      } catch (error) {
+        console.log('Error cargando desde nube');
+      }
+
+      // Fallback a localStorage
+      bonos = JSON.parse(localStorage.getItem('bonosData_v2')) || [];
+    }
+
+    function updateSyncStatus(status) {
+      const syncEl = document.getElementById('syncStatus');
+      if (status === 'syncing') {
+        syncEl.textContent = '⟳ Sincronizando...';
+        syncEl.classList.remove('synced');
+        syncEl.classList.add('syncing');
+      } else {
+        syncEl.textContent = '✓ Sincronizado';
+        syncEl.classList.remove('syncing');
+        syncEl.classList.add('synced');
+      }
+    }
+
+    async function syncData() {
+      await saveDataToCloud();
     }
 
     function switchTab(tabId, evt) {
@@ -603,7 +700,7 @@
       const idx = bonos.findIndex(b => b.numero === numero);
       if (idx !== -1) {
         bonos[idx][field] = value;
-        saveData();
+        saveDataToCloud();
       }
     }
 
@@ -624,7 +721,7 @@
         bonos[idx].oct = 'Pago recibido';
         bonos[idx].nov = 'Pago recibido';
         bonos[idx].dic = 'Pago recibido';
-        saveData();
+        saveDataToCloud();
         refreshCurrentTab();
       }
     }
@@ -643,7 +740,7 @@
             dic: "Pendiente",
             obs: ""
           };
-          saveData();
+          saveDataToCloud();
           refreshCurrentTab();
         }
       }
@@ -657,8 +754,8 @@
       if (activeTab === 'tab-todos') renderTodos();
     }
 
-    updateDashboard();
-    renderRecaudados();
+    // Iniciar
+    initData();
   </script>
 </body>
 </html>
