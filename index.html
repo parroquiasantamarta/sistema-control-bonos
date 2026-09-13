@@ -6,6 +6,7 @@
   <title>Sistema de Control de Bonos (000–999)</title>
   <!-- Librería para Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
     :root {
       --primary: #1a73e8;
@@ -75,16 +76,18 @@
       background: #34a853;
       color: white;
       border: none;
-      padding: 8px 16px;
+      padding: 10px 16px;
       border-radius: 4px;
       cursor: pointer;
       font-weight: bold;
       font-size: 14px;
       white-space: nowrap;
+      transition: all 0.2s;
     }
 
     .export-btn:hover {
       background: #2d8e47;
+      transform: scale(1.05);
     }
 
     .nav-menu {
@@ -301,6 +304,58 @@
       border: 1px solid var(--border);
       border-radius: 4px;
     }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal.show {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      text-align: center;
+      max-width: 400px;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      color: #1a73e8;
+    }
+
+    .modal-content p {
+      margin: 15px 0;
+      color: #70757a;
+    }
+
+    .modal-btn {
+      background: #34a853;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .modal-btn:hover {
+      background: #2d8e47;
+    }
   </style>
 </head>
 <body>
@@ -463,6 +518,16 @@
 
   </div>
 
+  <!-- Modal para confirmación de descarga -->
+  <div id="modalDescarga" class="modal">
+    <div class="modal-content">
+      <h2>📊 Descargando Excel</h2>
+      <p>Tu archivo está siendo generado...</p>
+      <p id="modalMensaje" style="font-size: 12px; color: #999;"></p>
+      <button class="modal-btn" onclick="cerrarModal()">Cerrar</button>
+    </div>
+  </div>
+
   <script>
     let bonos = [];
 
@@ -509,35 +574,60 @@
       await saveDataToCloud();
     }
 
+    function mostrarModal(mensaje) {
+      document.getElementById('modalMensaje').textContent = mensaje;
+      document.getElementById('modalDescarga').classList.add('show');
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalDescarga').classList.remove('show');
+    }
+
     function descargarExcel() {
-      const datosExcel = bonos.map(b => ({
-        'N° Bono': b.numero,
-        'Nombre': b.nombre,
-        'Teléfono': b.telefono,
-        'Septiembre': b.sep,
-        'Octubre': b.oct,
-        'Noviembre': b.nov,
-        'Diciembre': b.dic,
-        'Observaciones': b.obs
-      }));
+      mostrarModal('Generando archivo...');
+      
+      setTimeout(() => {
+        try {
+          const datosExcel = bonos.map(b => ({
+            'N° Bono': b.numero,
+            'Nombre': b.nombre || '',
+            'Teléfono': b.telefono || '',
+            'Septiembre': b.sep,
+            'Octubre': b.oct,
+            'Noviembre': b.nov,
+            'Diciembre': b.dic,
+            'Observaciones': b.obs || ''
+          }));
 
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(datosExcel);
-      XLSX.utils.book_append_sheet(wb, ws, "Bonos");
+          const wb = XLSX.utils.book_new();
+          const ws = XLSX.utils.json_to_sheet(datosExcel);
+          
+          ws['!cols'] = [
+            { wch: 10 },
+            { wch: 20 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 25 }
+          ];
 
-      ws['!cols'] = [
-        { wch: 10 },
-        { wch: 20 },
-        { wch: 15 },
-        { wch: 15 },
-        { wch: 15 },
-        { wch: 15 },
-        { wch: 15 },
-        { wch: 25 }
-      ];
+          XLSX.utils.book_append_sheet(wb, ws, "Bonos");
 
-      const fecha = new Date().toLocaleDateString('es-CO').replace(/\//g, '-');
-      XLSX.writeFile(wb, `Bonos_Control_${fecha}.xlsx`);
+          const fecha = new Date().toLocaleDateString('es-CO').replace(/\//g, '-');
+          const nombreArchivo = `Bonos_Control_${fecha}.xlsx`;
+          
+          XLSX.writeFile(wb, nombreArchivo);
+          
+          document.getElementById('modalMensaje').textContent = '✓ Descarga completada: ' + nombreArchivo;
+          
+          setTimeout(cerrarModal, 2000);
+        } catch (error) {
+          document.getElementById('modalMensaje').textContent = 'Error: ' + error.message;
+          console.error('Error al descargar:', error);
+        }
+      }, 500);
     }
 
     function switchTab(tabId, evt) {
@@ -696,6 +786,7 @@
       if (idx !== -1) {
         bonos[idx][field] = value;
         saveDataToCloud();
+        updateDashboard();
       }
     }
 
@@ -718,6 +809,7 @@
         bonos[idx].dic = 'Pago recibido';
         saveDataToCloud();
         refreshCurrentTab();
+        updateDashboard();
       }
     }
 
