@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Control de Bonos (000–999)</title>
+  <!-- Librería para Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
   <style>
     :root {
       --primary: #1a73e8;
@@ -46,13 +48,18 @@
       color: #1a73e8;
     }
 
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
     .sync-status {
       font-size: 12px;
       color: #70757a;
       padding: 5px 10px;
       background: #f1f3f4;
       border-radius: 4px;
-      margin-left: 10px;
     }
 
     .sync-status.synced {
@@ -63,6 +70,21 @@
     .sync-status.syncing {
       background: #fce8e6;
       color: #c5221f;
+    }
+
+    .export-btn {
+      background: #34a853;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .export-btn:hover {
+      background: #2d8e47;
     }
 
     /* Menú de Navegación */
@@ -282,7 +304,10 @@
   <div class="header">
     <h1>🎟️ Control de Bonos (000–999)</h1>
     <span style="font-size: 13px; color: #5f6368;">Sorteos: Sep $1M | Oct $1M | Nov $1M | Dic $2M</span>
-    <div class="sync-status" id="syncStatus">Sincronizando...</div>
+    <div class="header-actions">
+      <button class="export-btn" onclick="descargarExcel()" title="Descargar datos en Excel">📊 Descargar Excel</button>
+      <div class="sync-status" id="syncStatus">Sincronizando...</div>
+    </div>
   </div>
 
   <!-- MENÚ PRINCIPAL -->
@@ -442,16 +467,7 @@
   </div>
 
   <script>
-    // Usar Supabase como backend gratuito (sin autenticación)
-    const SUPABASE_URL = 'https://xyzabc.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
-    
-    // Alternativa: Usar JSONBin.io (gratis, sin registro)
-    const JSONBIN_URL = 'https://api.jsonbin.io/v3/b';
-    const BIN_ID = 'bonos_sistema_2026'; // ID único para guardar
-
     let bonos = [];
-    let syncInterval;
 
     // Inicializar datos
     async function initData() {
@@ -476,29 +492,17 @@
       renderRecaudados();
       
       // Sincronizar cada 10 segundos
-      syncInterval = setInterval(syncData, 10000);
+      setInterval(syncData, 10000);
     }
 
     // Guardar en la nube
     async function saveDataToCloud() {
       try {
         updateSyncStatus('syncing');
-        
-        // Usando localStorage como fallback + intentar guardar en nube
         localStorage.setItem('bonosData_v2', JSON.stringify(bonos));
-        
-        // Intentar guardar en nube (sin necesidad de autenticación)
-        const response = await fetch(`${JSONBIN_URL}/${BIN_ID}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(bonos)
-        }).catch(() => null);
-
         updateSyncStatus('synced');
       } catch (error) {
-        console.log('Datos guardados localmente', error);
+        console.log('Error al guardar:', error);
         updateSyncStatus('synced');
       }
     }
@@ -506,24 +510,11 @@
     // Cargar desde la nube
     async function loadDataFromCloud() {
       try {
-        // Primero intentar nube
-        const response = await fetch(`${JSONBIN_URL}/${BIN_ID}`, {
-          headers: {
-            'Accept': 'application/json'
-          }
-        }).catch(() => null);
-
-        if (response && response.ok) {
-          const data = await response.json();
-          bonos = data.record || [];
-          return;
-        }
+        bonos = JSON.parse(localStorage.getItem('bonosData_v2')) || [];
       } catch (error) {
-        console.log('Error cargando desde nube');
+        console.log('Error cargando datos');
+        bonos = [];
       }
-
-      // Fallback a localStorage
-      bonos = JSON.parse(localStorage.getItem('bonosData_v2')) || [];
     }
 
     function updateSyncStatus(status) {
@@ -541,6 +532,43 @@
 
     async function syncData() {
       await saveDataToCloud();
+    }
+
+    // FUNCIÓN PARA DESCARGAR EXCEL
+    function descargarExcel() {
+      // Crear objeto de datos para Excel
+      const datosExcel = bonos.map(b => ({
+        'N° Bono': b.numero,
+        'Nombre': b.nombre,
+        'Teléfono': b.telefono,
+        'Septiembre': b.sep,
+        'Octubre': b.oct,
+        'Noviembre': b.nov,
+        'Diciembre': b.dic,
+        'Observaciones': b.obs
+      }));
+
+      // Crear libro de Excel
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(datosExcel);
+      XLSX.utils.book_append_sheet(wb, ws, "Bonos");
+
+      // Ajustar ancho de columnas
+      const colWidths = [
+        { wch: 10 },
+        { wch: 20 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 25 }
+      ];
+      ws['!cols'] = colWidths;
+
+      // Descargar archivo
+      const fecha = new Date().toLocaleDateString('es-CO').replace(/\//g, '-');
+      XLSX.writeFile(wb, `Bonos_Control_${fecha}.xlsx`);
     }
 
     function switchTab(tabId, evt) {
