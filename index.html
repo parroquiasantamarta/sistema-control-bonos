@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Sistema de Control de Bonos (000–999)</title>
-  <!-- Librerías para Excel -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  
+  <!-- Librería SheetJS para exportar a Excel correctamente -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
     :root {
       --primary: #1a73e8;
@@ -32,7 +33,6 @@
     html, body {
       width: 100%;
       height: 100%;
-      overflow-x: hidden;
     }
 
     body {
@@ -40,6 +40,8 @@
       background-color: var(--bg);
       color: var(--text);
       font-size: 14px;
+      line-height: 1.4;
+      overflow-x: hidden;
     }
 
     .header {
@@ -59,8 +61,8 @@
 
     .header h1 {
       margin: 0;
-      font-size: clamp(16px, 5vw, 22px);
-      color: #1a73e8;
+      font-size: clamp(16px, 4vw, 22px);
+      color: var(--primary);
       flex: 1;
       min-width: 150px;
     }
@@ -76,7 +78,7 @@
     .sync-status {
       font-size: 11px;
       color: #70757a;
-      padding: 4px 8px;
+      padding: 6px 10px;
       background: #f1f3f4;
       border-radius: 4px;
       white-space: nowrap;
@@ -84,8 +86,8 @@
     }
 
     .sync-status.synced {
-      background: #e6f4ea;
-      color: #137333;
+      background: var(--success-bg);
+      color: var(--success-text);
       display: inline-block;
     }
 
@@ -99,7 +101,8 @@
       font-weight: bold;
       font-size: 12px;
       white-space: nowrap;
-      transition: all 0.2s;
+      transition: background 0.2s, transform 0.1s;
+      min-height: 36px;
       display: flex;
       align-items: center;
       gap: 5px;
@@ -107,7 +110,7 @@
 
     .export-btn:hover {
       background: #2d8e47;
-      transform: scale(1.05);
+      transform: scale(1.02);
     }
 
     .export-btn:active {
@@ -118,10 +121,6 @@
       .export-btn {
         padding: 6px 10px;
         font-size: 11px;
-      }
-      
-      .sync-status {
-        display: none !important;
       }
     }
 
@@ -140,10 +139,6 @@
       height: 4px;
     }
 
-    .nav-menu::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
     .nav-menu::-webkit-scrollbar-thumb {
       background: var(--border);
       border-radius: 2px;
@@ -152,18 +147,19 @@
     .nav-btn {
       background: none;
       border: none;
-      padding: 12px 12px;
+      padding: 12px 14px;
       font-size: 13px;
       font-weight: 600;
       color: #5f6368;
       cursor: pointer;
       border-bottom: 3px solid transparent;
       transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 5px;
       white-space: nowrap;
       flex-shrink: 0;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .nav-btn:hover {
@@ -176,31 +172,24 @@
       border-bottom-color: var(--primary);
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 600px) {
       .nav-btn {
         padding: 10px 8px;
         font-size: 11px;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .nav-btn {
-        padding: 8px 6px;
-        font-size: 10px;
-        gap: 3px;
+        min-height: 40px;
       }
     }
 
     .container {
-      max-width: 100%;
+      max-width: 1400px;
       margin: 15px auto;
       padding: 0 12px;
     }
 
-    @media (min-width: 1024px) {
+    @media (max-width: 600px) {
       .container {
-        max-width: 1400px;
-        padding: 0 15px;
+        padding: 0 10px;
+        margin: 12px auto;
       }
     }
 
@@ -220,18 +209,19 @@
 
     .grid-dashboard {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
       gap: 10px;
       margin-bottom: 15px;
     }
 
-    @media (min-width: 768px) {
+    @media (max-width: 600px) {
       .grid-dashboard {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
       }
     }
 
-    @media (min-width: 1024px) {
+    @media (min-width: 768px) {
       .grid-dashboard {
         grid-template-columns: repeat(4, 1fr);
       }
@@ -252,16 +242,16 @@
     }
 
     .card h3 {
-      margin: 0 0 8px 0;
+      margin: 0 0 6px 0;
       font-size: 11px;
       color: #5f6368;
       text-transform: uppercase;
       font-weight: 600;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
     }
 
     .metric-value {
-      font-size: clamp(18px, 4vw, 28px);
+      font-size: clamp(16px, 3.5vw, 26px);
       font-weight: bold;
       color: var(--primary);
       margin-bottom: 4px;
@@ -279,7 +269,7 @@
     .filter-panel {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      padding: 12px;
+      padding: 10px 12px;
       border-radius: 6px;
       margin-bottom: 12px;
       display: flex;
@@ -288,13 +278,23 @@
       align-items: center;
     }
 
+    @media (max-width: 600px) {
+      .filter-panel {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 8px 10px;
+        gap: 6px;
+      }
+    }
+
     input[type="text"], select {
-      padding: 8px 10px;
+      padding: 8px;
       border: 1px solid var(--border);
       border-radius: 4px;
-      font-size: 12px;
+      font-size: 13px;
       outline: none;
-      transition: border-color 0.2s;
+      min-height: 36px;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
 
     input[type="text"]:focus, select:focus {
@@ -304,11 +304,25 @@
 
     input[type="text"] {
       flex: 1;
-      min-width: 140px;
+      min-width: 150px;
+    }
+
+    @media (max-width: 600px) {
+      input[type="text"] {
+        width: 100%;
+        min-width: unset;
+      }
     }
 
     select {
       min-width: 120px;
+    }
+
+    @media (max-width: 600px) {
+      select {
+        width: 100%;
+        min-width: unset;
+      }
     }
 
     .btn {
@@ -321,6 +335,7 @@
       font-weight: bold;
       font-size: 12px;
       white-space: nowrap;
+      min-height: 36px;
       transition: all 0.2s;
     }
 
@@ -331,6 +346,12 @@
 
     .btn:active {
       transform: scale(0.98);
+    }
+
+    @media (max-width: 600px) {
+      .btn {
+        width: 100%;
+      }
     }
 
     .table-container {
@@ -360,18 +381,26 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
+      min-width: 600px;
     }
 
     @media (max-width: 600px) {
       table {
         font-size: 11px;
+        min-width: 500px;
       }
     }
 
     th, td {
-      padding: 10px 8px;
+      padding: 8px 10px;
       text-align: left;
       border-bottom: 1px solid var(--border);
+    }
+
+    @media (max-width: 600px) {
+      th, td {
+        padding: 6px 8px;
+      }
     }
 
     th {
@@ -382,15 +411,9 @@
       font-size: 12px;
     }
 
-    @media (max-width: 600px) {
-      th, td {
-        padding: 8px 6px;
-      }
-    }
-
     .status-select {
-      padding: 6px 8px;
-      border-radius: 3px;
+      padding: 4px 6px;
+      border-radius: 4px;
       font-weight: bold;
       border: 1px solid var(--border);
       cursor: pointer;
@@ -421,11 +444,12 @@
       color: white;
       border: none;
       padding: 6px 10px;
-      border-radius: 3px;
+      border-radius: 4px;
       font-size: 11px;
       cursor: pointer;
       font-weight: bold;
       white-space: nowrap;
+      min-height: 30px;
       transition: all 0.2s;
     }
 
@@ -443,12 +467,12 @@
       color: white;
       border: none;
       padding: 6px 10px;
-      border-radius: 3px;
+      border-radius: 4px;
       font-size: 11px;
       cursor: pointer;
       font-weight: bold;
-      margin-left: 2px;
       white-space: nowrap;
+      min-height: 30px;
       transition: all 0.2s;
     }
 
@@ -464,7 +488,7 @@
     .summary-box {
       background: #e8f0fe;
       border-left: 4px solid var(--primary);
-      padding: 12px 14px;
+      padding: 10px 12px;
       margin-bottom: 12px;
       border-radius: 0 4px 4px 0;
       font-size: 13px;
@@ -475,24 +499,14 @@
       gap: 10px;
     }
 
-    .summary-box strong {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 6px 8px;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      font-size: 11px;
-      transition: all 0.2s;
-    }
-
-    input[type="text"]:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
+    @media (max-width: 600px) {
+      .summary-box {
+        flex-direction: column;
+        align-items: flex-start;
+        font-size: 12px;
+        padding: 8px 10px;
+        gap: 6px;
+      }
     }
 
     .modal {
@@ -515,13 +529,12 @@
 
     .modal-content {
       background-color: #fff;
-      padding: 25px;
+      padding: 20px 25px;
       border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
       text-align: center;
-      max-width: 100%;
-      width: 100%;
-      max-width: 450px;
+      width: 90%;
+      max-width: 400px;
       animation: slideIn 0.3s ease;
     }
 
@@ -538,14 +551,14 @@
 
     .modal-content h2 {
       margin: 0 0 12px 0;
-      color: #1a73e8;
-      font-size: 20px;
+      color: var(--primary);
+      font-size: 18px;
     }
 
     .modal-content p {
       margin: 10px 0;
       color: #70757a;
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.5;
     }
 
@@ -553,12 +566,12 @@
       background: #34a853;
       color: white;
       border: none;
-      padding: 12px 24px;
+      padding: 8px 18px;
       border-radius: 4px;
       cursor: pointer;
       font-weight: bold;
-      margin-top: 15px;
-      font-size: 14px;
+      margin-top: 12px;
+      font-size: 13px;
       transition: all 0.2s;
     }
 
@@ -572,69 +585,53 @@
     }
 
     h2 {
-      font-size: clamp(18px, 5vw, 26px);
-      margin-top: 15px;
-      margin-bottom: 12px;
-      color: var(--text);
+      font-size: clamp(16px, 4vw, 22px);
+      margin-top: 10px;
+      margin-bottom: 10px;
     }
 
-    h3 {
-      font-size: clamp(16px, 4vw, 20px);
-      margin-top: 12px;
-      margin-bottom: 10px;
-      color: var(--text);
+    @media (max-width: 600px) {
+      h2 {
+        margin-top: 8px;
+        margin-bottom: 8px;
+      }
     }
 
     .info-msg {
-      color: #137333;
+      color: var(--success-text);
       font-weight: bold;
     }
 
     .error-msg {
-      color: #c5221f;
+      color: var(--warning-text);
       font-weight: bold;
     }
 
-    .no-data-msg {
+    .no-data {
       text-align: center;
-      padding: 30px 20px;
+      padding: 30px 15px;
       color: #70757a;
-      font-size: 14px;
+      font-size: 13px;
     }
 
+    input[type="text"] {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
+    }
+
+    /* Prevenir zoom en inputs en móvil */
     @media (max-width: 600px) {
-      .container {
-        padding: 0 10px;
-      }
-
-      h2, h3 {
-        margin-top: 10px;
-        margin-bottom: 8px;
-      }
-
-      .filter-panel {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .filter-panel select,
-      .filter-panel input {
-        width: 100%;
-      }
-
-      .modal-content {
-        padding: 20px;
-      }
-
-      .summary-box {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-
-    @media (max-width: 768px) and (min-width: 601px) {
-      .container {
-        padding: 0 12px;
+      input[type="text"], select {
+        font-size: 16px;
       }
     }
   </style>
@@ -648,7 +645,7 @@
         <span>📊</span>
         <span>Excel</span>
       </button>
-      <div class="sync-status synced" id="syncStatus">✓ Listo</div>
+      <div class="sync-status synced" id="syncStatus">✓ Guardado</div>
     </div>
   </div>
 
@@ -661,35 +658,35 @@
 
   <div class="container">
 
-    <!-- TAB 1: RECAUDADO -->
+    <!-- TAB RECAUDO -->
     <div id="tab-recau" class="tab-content active">
       <h2>💰 Recaudo General</h2>
       <div class="grid-dashboard">
         <div class="card">
-          <h3>Septiembre ($1M)</h3>
+          <h3>Septiembre ($1k)</h3>
           <div class="metric-value" id="r-sep-val">$0</div>
           <div class="metric-sub"><strong id="r-sep-cnt">0</strong> pagados</div>
         </div>
         <div class="card">
-          <h3>Octubre ($1M)</h3>
+          <h3>Octubre ($1k)</h3>
           <div class="metric-value" id="r-oct-val">$0</div>
           <div class="metric-sub"><strong id="r-oct-cnt">0</strong> pagados</div>
         </div>
         <div class="card">
-          <h3>Noviembre ($1M)</h3>
+          <h3>Noviembre ($1k)</h3>
           <div class="metric-value" id="r-nov-val">$0</div>
           <div class="metric-sub"><strong id="r-nov-cnt">0</strong> pagados</div>
         </div>
         <div class="card">
-          <h3>Diciembre ($2M)</h3>
+          <h3>Diciembre ($2k)</h3>
           <div class="metric-value" id="r-dic-val">$0</div>
           <div class="metric-sub"><strong id="r-dic-cnt">0</strong> pagados</div>
         </div>
       </div>
 
       <div class="summary-box">
-        <strong>💵 Total Recaudado: </strong>
-        <span id="r-total-val" style="font-size: 18px; color: #1a73e8; font-weight: bold;">$0</span>
+        <strong>Total Recaudado: </strong> 
+        <span id="r-total-val" style="font-size: 16px; color: #1a73e8; font-weight: bold;">$0</span>
       </div>
 
       <h3>Detalle por Mes</h3>
@@ -719,11 +716,11 @@
       </div>
     </div>
 
-    <!-- TAB 2: PENDIENTES -->
+    <!-- TAB PENDIENTES -->
     <div id="tab-faltan" class="tab-content">
       <h2>⚠️ Bonos Pendientes</h2>
       <div class="summary-box" style="border-left-color: #c5221f; background: #fce8e6;">
-        <strong>ℹ️ Selecciona mes para ver pendientes</strong>
+        Selecciona un mes para ver las personas con pago pendiente.
       </div>
 
       <div class="filter-panel">
@@ -753,12 +750,12 @@
       </div>
     </div>
 
-    <!-- TAB 3: BUSCAR -->
+    <!-- TAB BUSCAR -->
     <div id="tab-buscar" class="tab-content">
       <h2>🔍 Buscar Bono</h2>
       <div class="filter-panel">
-        <input type="text" id="inputBuscar" placeholder="N° de bono, nombre o teléfono..." onkeyup="ejecutarBusqueda()">
-        <button class="btn" onclick="limpiarBusqueda()">🔄 Limpiar</button>
+        <input type="text" id="inputBuscar" placeholder="N°, Nombre o Teléfono..." onkeyup="ejecutarBusqueda()">
+        <button class="btn" onclick="limpiarBusqueda()">Limpiar</button>
       </div>
 
       <div class="table-container">
@@ -781,7 +778,7 @@
       </div>
     </div>
 
-    <!-- TAB 4: TODOS LOS BONOS -->
+    <!-- TAB TODOS -->
     <div id="tab-todos" class="tab-content">
       <h2>📋 Todos los Bonos (000–999)</h2>
       <div class="table-container">
@@ -806,7 +803,7 @@
 
   </div>
 
-  <!-- MODAL DE DESCARGA -->
+  <!-- MODAL EXCEL -->
   <div id="modalDescarga" class="modal">
     <div class="modal-content">
       <h2>📊 Descargando Excel</h2>
@@ -819,7 +816,7 @@
     let bonos = [];
 
     async function initData() {
-      await loadDataFromCloud();
+      loadDataFromStorage();
       if (bonos.length === 0) {
         for (let i = 0; i < 1000; i++) {
           let numStr = i.toString().padStart(3, '0');
@@ -834,31 +831,27 @@
             obs: ""
           });
         }
-        await saveDataToCloud();
+        saveDataToStorage();
       }
       updateDashboard();
       renderRecaudados();
-      setInterval(syncData, 10000);
     }
 
-    async function saveDataToCloud() {
+    function saveDataToStorage() {
       try {
         localStorage.setItem('bonosData_v2', JSON.stringify(bonos));
       } catch (error) {
-        console.log('Error al guardar:', error);
+        console.error('Error al guardar datos:', error);
       }
     }
 
-    async function loadDataFromCloud() {
+    function loadDataFromStorage() {
       try {
-        bonos = JSON.parse(localStorage.getItem('bonosData_v2')) || [];
+        const stored = localStorage.getItem('bonosData_v2');
+        bonos = stored ? JSON.parse(stored) : [];
       } catch (error) {
         bonos = [];
       }
-    }
-
-    async function syncData() {
-      await saveDataToCloud();
     }
 
     function mostrarModal(mensaje) {
@@ -871,43 +864,39 @@
     }
 
     function descargarExcel() {
-      mostrarModal('⏳ Preparando archivo...');
+      mostrarModal('⏳ Generando archivo Excel...');
       
       setTimeout(() => {
         try {
-          const datosExcel = [];
-          bonos.forEach(b => {
-            datosExcel.push({
-              'Nº Bono': b.numero,
-              'Nombre': b.nombre || '',
-              'Teléfono': b.telefono || '',
-              'Septiembre': b.sep,
-              'Octubre': b.oct,
-              'Noviembre': b.nov,
-              'Diciembre': b.dic,
-              'Observaciones': b.obs || ''
-            });
-          });
-
           if (typeof XLSX === 'undefined') {
-            document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">❌ Error: Librería no cargada</span>';
+            document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">Error: La librería XLSX no está cargada.</span>';
             return;
           }
+
+          const datosExcel = bonos.map(b => ({
+            'Nº Bono': b.numero,
+            'Nombre': b.nombre || '',
+            'Teléfono': b.telefono || '',
+            'Septiembre': b.sep,
+            'Octubre': b.oct,
+            'Noviembre': b.nov,
+            'Diciembre': b.dic,
+            'Observaciones': b.obs || ''
+          }));
 
           const ws = XLSX.utils.json_to_sheet(datosExcel);
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, "Bonos");
 
-          // Estilos de columnas
           ws['!cols'] = [
-            { wch: 10 },   // Nº Bono
-            { wch: 20 },   // Nombre
-            { wch: 15 },   // Teléfono
-            { wch: 15 },   // Septiembre
-            { wch: 15 },   // Octubre
-            { wch: 15 },   // Noviembre
-            { wch: 15 },   // Diciembre
-            { wch: 25 }    // Observaciones
+            { wch: 10 },
+            { wch: 22 },
+            { wch: 16 },
+            { wch: 14 },
+            { wch: 14 },
+            { wch: 14 },
+            { wch: 14 },
+            { wch: 25 }
           ];
 
           const now = new Date();
@@ -917,18 +906,18 @@
           const hora = String(now.getHours()).padStart(2, '0');
           const min = String(now.getMinutes()).padStart(2, '0');
           
-          const nombreArchivo = `Bonos_${dia}-${mes}-${año}_${hora}-${min}.xlsx`;
+          const nombreArchivo = `Control_Bonos_${dia}-${mes}-${año}_${hora}-${min}.xlsx`;
           
           XLSX.writeFile(wb, nombreArchivo);
           
-          document.getElementById('modalMensaje').innerHTML = '<span class="info-msg">✅ Descargado: ' + nombreArchivo + '</span>';
+          document.getElementById('modalMensaje').innerHTML = '<span class="info-msg">✓ ¡Archivo descargado con éxito!</span>';
           
-          setTimeout(cerrarModal, 3000);
+          setTimeout(cerrarModal, 2500);
         } catch (error) {
-          document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">❌ Error: ' + error.message + '</span>';
+          document.getElementById('modalMensaje').innerHTML = '<span class="error-msg">Error: ' + error.message + '</span>';
           console.error('Error Excel:', error);
         }
-      }, 800);
+      }, 500);
     }
 
     function switchTab(tabId, evt) {
@@ -970,8 +959,7 @@
       document.getElementById('r-nov-val').textContent = '$' + recNov.toLocaleString();
       document.getElementById('r-dic-val').textContent = '$' + recDic.toLocaleString();
 
-      let total = recSep + recOct + recNov + recDic;
-      document.getElementById('r-total-val').textContent = '$' + total.toLocaleString();
+      document.getElementById('r-total-val').textContent = '$' + (recSep + recOct + recNov + recDic).toLocaleString();
     }
 
     function renderRecaudados() {
@@ -981,7 +969,7 @@
 
       const filtrados = bonos.filter(b => b[mes] === 'Pago recibido');
       if(filtrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6"><div class="no-data-msg">Sin registros para este mes</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6"><div class="no-data">Sin registros recaudados</div></td></tr>';
         return;
       }
 
@@ -993,7 +981,7 @@
           <td>${item.telefono || '-'}</td>
           <td><span class="status-select status-recibido">✓ Pagado</span></td>
           <td>${item.obs || '-'}</td>
-          <td><button class="clear-btn" onclick="deshacerPago('${item.numero}', '${mes}')">✕ Anular</button></td>
+          <td><button class="clear-btn" onclick="deshacerPago('${item.numero}', '${mes}')">✕ Deshacer</button></td>
         `;
         tbody.appendChild(row);
       });
@@ -1008,7 +996,7 @@
       document.getElementById('cnt-faltantes-text').textContent = filtrados.length + ' Pendientes';
 
       if(filtrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6"><div class="no-data-msg">¡Todos pagados! ✅</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6"><div class="no-data">¡Todos pagados! ✓</div></td></tr>';
         return;
       }
 
@@ -1016,10 +1004,10 @@
         const row = document.createElement('tr');
         row.innerHTML = `
           <td><strong>${item.numero}</strong></td>
-          <td><input type="text" value="${item.nombre}" onchange="updateRecord('${item.numero}', 'nombre', this.value)" placeholder="Nombre..."></td>
-          <td><input type="text" value="${item.telefono}" onchange="updateRecord('${item.numero}', 'telefono', this.value)" placeholder="Teléfono..."></td>
-          <td><span class="status-select status-pendiente">⏳ Pendiente</span></td>
-          <td><input type="text" value="${item.obs}" onchange="updateRecord('${item.numero}', 'obs', this.value)" placeholder="Novedad..."></td>
+          <td><input type="text" value="${item.nombre}" placeholder="Nombre..." onchange="updateRecord('${item.numero}', 'nombre', this.value)"></td>
+          <td><input type="text" value="${item.telefono}" placeholder="Teléfono..." onchange="updateRecord('${item.numero}', 'telefono', this.value)"></td>
+          <td><span class="status-select status-pendiente">Pendiente</span></td>
+          <td><input type="text" value="${item.obs}" placeholder="Obs..." onchange="updateRecord('${item.numero}', 'obs', this.value)"></td>
           <td><button class="action-btn" onclick="marcarPagado('${item.numero}', '${mes}')">✓ Pagar</button></td>
         `;
         tbody.appendChild(row);
@@ -1032,13 +1020,13 @@
       tbody.innerHTML = '';
 
       if(!q) {
-        tbody.innerHTML = '<tr><td colspan="9"><div class="no-data-msg">Ingresa un número, nombre o teléfono para buscar</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9"><div class="no-data">Ingresa un número, nombre o teléfono para buscar</div></td></tr>';
         return;
       }
 
       const res = bonos.filter(b => b.numero.includes(q) || b.nombre.toLowerCase().includes(q) || b.telefono.includes(q));
       if(res.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9"><div class="no-data-msg">No se encontraron resultados</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9"><div class="no-data">Sin resultados encontrados</div></td></tr>';
         return;
       }
 
@@ -1053,12 +1041,6 @@
     function renderTodos() {
       const tbody = document.getElementById('tb-todos');
       tbody.innerHTML = '';
-      
-      if(bonos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9"><div class="no-data-msg">Cargando datos...</div></td></tr>';
-        return;
-      }
-      
       bonos.forEach(item => renderRowInto(tbody, item));
     }
 
@@ -1066,14 +1048,14 @@
       const row = document.createElement('tr');
       row.innerHTML = `
         <td><strong>${item.numero}</strong></td>
-        <td><input type="text" value="${item.nombre}" onchange="updateRecord('${item.numero}', 'nombre', this.value)" placeholder="Nombre..."></td>
-        <td><input type="text" value="${item.telefono}" onchange="updateRecord('${item.numero}', 'telefono', this.value)" placeholder="Teléfono..."></td>
+        <td><input type="text" value="${item.nombre}" placeholder="Nombre..." onchange="updateRecord('${item.numero}', 'nombre', this.value)"></td>
+        <td><input type="text" value="${item.telefono}" placeholder="Teléfono..." onchange="updateRecord('${item.numero}', 'telefono', this.value)"></td>
         <td>${getStatusSelect(item.numero, 'sep', item.sep)}</td>
         <td>${getStatusSelect(item.numero, 'oct', item.oct)}</td>
         <td>${getStatusSelect(item.numero, 'nov', item.nov)}</td>
         <td>${getStatusSelect(item.numero, 'dic', item.dic)}</td>
-        <td><input type="text" value="${item.obs}" onchange="updateRecord('${item.numero}', 'obs', this.value)" placeholder="Observación..."></td>
-        <td><button class="action-btn" onclick="quickPayAll('${item.numero}')">✓ Todo</button></td>
+        <td><input type="text" value="${item.obs}" placeholder="Obs..." onchange="updateRecord('${item.numero}', 'obs', this.value)"></td>
+        <td><button class="action-btn" onclick="quickPayAll('${item.numero}')">Pagar Todo</button></td>
       `;
       tbody.appendChild(row);
     }
@@ -1092,7 +1074,7 @@
       const idx = bonos.findIndex(b => b.numero === numero);
       if (idx !== -1) {
         bonos[idx][field] = value;
-        saveDataToCloud();
+        saveDataToStorage();
         updateDashboard();
       }
     }
@@ -1114,7 +1096,7 @@
         bonos[idx].oct = 'Pago recibido';
         bonos[idx].nov = 'Pago recibido';
         bonos[idx].dic = 'Pago recibido';
-        saveDataToCloud();
+        saveDataToStorage();
         refreshCurrentTab();
         updateDashboard();
       }
@@ -1126,14 +1108,6 @@
       else if (activeTab === 'tab-faltan') renderFaltantes();
       else if (activeTab === 'tab-buscar') ejecutarBusqueda();
       else if (activeTab === 'tab-todos') renderTodos();
-    }
-
-    // Detectar si estamos en mobile para optimizaciones
-    const isMobile = window.innerWidth <= 768;
-    
-    // Prevenir zoom en inputs en mobile
-    if (isMobile) {
-      document.addEventListener('touchstart', function() {}, false);
     }
 
     initData();
